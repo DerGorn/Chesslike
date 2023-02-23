@@ -14,3 +14,5 @@ The planned steps are:
   - items: Building on the special behaviour implementation, items that influence the game will be inplemented.
   - progression: Put everything above to together to make a progression system.
   - AI: Somewhere the computer needs to learn this game, otherwise it would be quite a boring single player experience.
+
+The current version runs on https://dergorn.github.io/Chesslike/
