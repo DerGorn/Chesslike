@@ -89,6 +89,30 @@ window.addEventListener("click", (event) => {
     ) {
       board.sprintedPawn = clickedOn.pos;
     }
+    //castle
+    if (figures[clickedTile.occupied].type === FigureTypes.KING) {
+      const dist = pos.x(clickedTile.pos, clickedOn.pos);
+      const white = figures[clickedTile.occupied].white;
+      if (dist === 2) {
+        const left = board.getTile(pos.new(0, white ? board.height - 1 : 0));
+        if (left) {
+          const rook = left.occupied;
+          left.occupied = -1;
+          const target = board.getTile(pos.add(clickedOn.pos, pos.new(1, 0)));
+          target && (target.occupied = rook);
+        }
+      } else if (dist === -2) {
+        const right = board.getTile(
+          pos.new(board.width - 1, white ? board.height - 1 : 0)
+        );
+        if (right) {
+          const rook = right.occupied;
+          right.occupied = -1;
+          const target = board.getTile(pos.add(clickedOn.pos, pos.new(-1, 0)));
+          target && (target.occupied = rook);
+        }
+      }
+    }
     //move
     capturePiece(clickedOn);
     const fig = clickedTile.occupied;

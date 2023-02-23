@@ -11,6 +11,8 @@ enum FigureTypes {
   QUEEN,
 }
 
+const TypesWithSpecialMovement = [FigureTypes.PAWN, FigureTypes.KING];
+
 type Figure = {
   getValidMoves: (pos: Position, board: Board) => Position[];
   type: FigureTypes;
@@ -18,40 +20,142 @@ type Figure = {
   moved: boolean;
 };
 
+type Rule = {
+  distance?: number | null;
+  forward?: boolean | null;
+  left?: boolean | null;
+  distanceX?: number | null;
+  capture?: boolean | null;
+};
+
+const newRule = ({
+  distance = null,
+  forward = null,
+  left = null,
+  distanceX = null,
+  capture = null,
+}: Rule = {}): [
+  number | null,
+  boolean | null,
+  boolean | null,
+  number | null,
+  boolean | null
+] => {
+  return [distance, forward, left, distanceX, capture];
+};
+
+const getMoveFunction = (
+  forward: boolean | null,
+  left: boolean | null
+): ((p: Position, white: boolean, distance: number) => Position) => {
+  if (forward != null) {
+    if (left != null) {
+      return (p: Position, white: boolean, distance: number) =>
+        pos.moveDiagonal(p, white, distance, forward, left);
+    } else
+      return (p: Position, white: boolean, distance: number) =>
+        pos.moveVertical(p, white, distance, forward);
+  } else {
+    if (left != null) {
+      return (p: Position, white: boolean, distance: number) =>
+        pos.moveHorizontal(p, white, distance, left);
+    } else
+      throw new Error(
+        "Tried running in circles. Tried moving with 'forward = null' and 'left = null', resulting in no logical step to take."
+      );
+  }
+};
+
+/**
+ * Get all possible Moves from a starting position with some defined rules.
+ * Normally all tiles in a straight line from the start to the target are valid, until either a other piece or the end of the board are reached.
+ * By setting a 'distanceX' the behaviour changes to a single jump unto the target.
+ *
+ *
+ * @param pos Position of the figure
+ * @param white Color of the figure
+ * @param board The board
+ * @param distance The max distance to travel, if 'null' distance is infinite
+ * @param forward Toggles vertical movement, if 'null' the figure may only move horizontal
+ * @param left Toggles hotizontal movement, if 'null' the figure may only move vertical. If left and forward are set, the movement will be in both directions
+ * @param distanceX Defines behaviour for a combination of vertical and horizontal movement. If 'null' both use dstance, so the movement is diagonal. If it is a number, horizopntal movement uses this value. In addition only the specified tile will be checked, with no regard for pieces inbetween.
+ * @param capture Defines the capture mode. Standard is 'null', which is the normal behaviour, that allows capture. 'false' forbids captures, for example the forward movement of a pawn. 'true' only allows moves that capture, for example diagonal movement of a pawn.
+ */
+const getTiles = (
+  p: Position,
+  white: boolean,
+  board: Board,
+  distance: number | null = null,
+  forward: boolean | null = true,
+  left: boolean | null = null,
+  distanceX: number | null = null,
+  capture: boolean | null = null
+): Position[] => {
+  let validPositions: Position[] = [];
+  if (distanceX != null) {
+    if (distance == null)
+      throw new Error(
+        "Tried jumping of the board. Tried jumping on the target tile, because 'distanceX' was set, but located the tile at infinity, because no 'distance' was provided."
+      );
+    let target: Position = p;
+    if (forward != null)
+      target = pos.moveVertical(target, white, distance, forward);
+    if (left != null)
+      target = pos.moveHorizontal(target, white, distanceX, left);
+    if (pos.dist(target, p) === 0)
+      throw new Error(
+        "Tried jumping nowhere. No distances where provided, so the jump landed on the starting tile."
+      );
+    const tile = board.getTile(target);
+    if (!tile) return validPositions;
+    if (tile.occupied === -1 || figures[tile.occupied].white !== white)
+      board.getTile(target) && validPositions.push(target);
+    return validPositions;
+  }
+  const move = getMoveFunction(forward, left);
+  let target = p;
+  while (distance == null ? true : distance > 0) {
+    target = move(target, white, 1);
+    const tile = board.getTile(target);
+    if (tile == null) break;
+    validPositions.push(target);
+    if (tile.occupied !== -1) {
+      if (capture === false || figures[tile.occupied].white === white)
+        validPositions.pop();
+      break;
+    }
+    if (capture === true) {
+      if (tile.occupied === -1) validPositions.pop();
+      else {
+        if (figures[tile.occupied].white === white) {
+          validPositions.pop();
+          break;
+        }
+      }
+    }
+    distance = distance == null ? null : distance - 1;
+  }
+  return validPositions;
+};
+
 const createFigure = (type: FigureTypes, white: boolean): Figure => {
   let getValidMoves = (pos: Position, board: Board): Position[] => {
     console.log(pos, board);
     return [];
   };
+  let movementRules: Rule[] = [];
   switch (type) {
     case FigureTypes.PAWN:
       getValidMoves = function (p: Position, board: Board) {
-        let validMoves = [];
-        const forward = pos.moveVertical(p, this.white);
-        if (board.getTile(forward)?.occupied === -1) {
-          validMoves.push(forward);
-          if (!this.moved) {
-            const twoForward = pos.moveVertical(p, this.white, 2);
-            if (board.getTile(twoForward)?.occupied === -1)
-              validMoves.push(twoForward);
-          }
-        }
-        const left = pos.moveDiagonal(p, this.white, 1);
-        const pieceLeft = board.getTile(left);
-        if (
-          pieceLeft &&
-          pieceLeft.occupied !== -1 &&
-          figures[pieceLeft.occupied].white !== this.white
-        )
-          validMoves.push(left);
-        const right = pos.moveDiagonal(p, this.white, 1, true, false);
-        const pieceRight = board.getTile(right);
-        if (
-          pieceRight &&
-          pieceRight.occupied !== -1 &&
-          figures[pieceRight.occupied].white !== this.white
-        )
-          validMoves.push(right);
+        movementRules = [
+          { distance: this.moved ? 1 : 2, forward: true, capture: false },
+          { distance: 1, forward: true, left: true, capture: true },
+          { distance: 1, forward: true, left: false, capture: true },
+        ];
+        let validMoves: Position[] = [];
+        movementRules.forEach((rule) => {
+          validMoves.push(...getTiles(p, this.white, board, ...newRule(rule)));
+        });
         if (
           board.sprintedPawn &&
           Math.abs(pos.x(board.sprintedPawn, p)) === 1 &&
@@ -62,36 +166,110 @@ const createFigure = (type: FigureTypes, white: boolean): Figure => {
       };
       break;
     case FigureTypes.ROOCK:
-      getValidMoves = (pos) => {
-        console.log(pos);
-        return [];
-      };
+      movementRules = [
+        { forward: true },
+        { forward: false },
+        { left: true },
+        { left: false },
+      ];
       break;
     case FigureTypes.KNIGHT:
-      getValidMoves = (pos) => {
-        console.log(pos);
-        return [];
-      };
+      movementRules = [
+        { distance: 2, forward: true, left: true, distanceX: 1 },
+        { distance: 2, forward: true, left: false, distanceX: 1 },
+        { distance: 2, forward: false, left: true, distanceX: 1 },
+        { distance: 2, forward: false, left: false, distanceX: 1 },
+        { distance: 1, forward: true, left: true, distanceX: 2 },
+        { distance: 1, forward: true, left: false, distanceX: 2 },
+        { distance: 1, forward: false, left: true, distanceX: 2 },
+        { distance: 1, forward: false, left: false, distanceX: 2 },
+      ];
       break;
     case FigureTypes.BISHOP:
-      getValidMoves = (pos) => {
-        console.log(pos);
-        return [];
-      };
+      movementRules = [
+        { forward: true, left: true },
+        { forward: false, left: true },
+        { forward: true, left: false },
+        { forward: false, left: false },
+      ];
       break;
     case FigureTypes.KING:
-      getValidMoves = (pos) => {
-        console.log(pos);
-        return [];
+      getValidMoves = function (p: Position, board: Board) {
+        movementRules = [
+          { distance: 1, forward: true },
+          { distance: 1, forward: false },
+          { distance: 1, left: true },
+          { distance: 1, left: false },
+          { distance: 1, forward: true, left: true },
+          { distance: 1, forward: true, left: false },
+          { distance: 1, forward: false, left: true },
+          { distance: 1, forward: false, left: false },
+        ];
+        let validMoves: Position[] = [];
+        movementRules.forEach((rule) => {
+          validMoves.push(...getTiles(p, this.white, board, ...newRule(rule)));
+        });
+        const left = board.getTile(pos.new(0, white ? board.height - 1 : 0));
+        if (left && left.occupied !== -1) {
+          const roock = figures[left.occupied];
+          if (
+            !roock.moved &&
+            !this.moved &&
+            getTiles(
+              p,
+              white,
+              board,
+              ...newRule({ left: this.white === true, capture: false })
+            ).length === 3
+          )
+            validMoves.push(
+              pos.moveHorizontal(p, white, 2, this.white === true)
+            );
+        }
+        const right = board.getTile(
+          pos.new(board.width - 1, white ? board.height - 1 : 0)
+        );
+        console.log(right);
+        if (right && right.occupied !== -1) {
+          const roock = figures[right.occupied];
+          if (
+            !roock.moved &&
+            !this.moved &&
+            getTiles(
+              p,
+              white,
+              board,
+              ...newRule({ left: this.white === false, capture: false })
+            ).length === 2
+          )
+            validMoves.push(
+              pos.moveHorizontal(p, white, 2, this.white === false)
+            );
+        }
+        return validMoves;
       };
       break;
     case FigureTypes.QUEEN:
-      getValidMoves = (pos) => {
-        console.log(pos);
-        return [];
-      };
+      movementRules = [
+        { forward: true },
+        { forward: false },
+        { left: true },
+        { left: false },
+        { forward: true, left: true },
+        { forward: true, left: false },
+        { forward: false, left: true },
+        { forward: false, left: false },
+      ];
       break;
   }
+  if (!TypesWithSpecialMovement.includes(type))
+    getValidMoves = function (p: Position, board: Board) {
+      let validMoves: Position[] = [];
+      movementRules.forEach((rule) => {
+        validMoves.push(...getTiles(p, this.white, board, ...newRule(rule)));
+      });
+      return validMoves;
+    };
   return { getValidMoves, type, white, moved: false };
 };
 
