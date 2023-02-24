@@ -7,6 +7,7 @@ type Tile = {
   threatened: boolean;
   clicked: boolean;
   occupied: number;
+  threat: string;
 };
 
 const tile = {
@@ -18,6 +19,7 @@ const tile = {
       threatened: false,
       clicked: false,
       occupied: -1,
+      threat: "",
     };
   },
 };

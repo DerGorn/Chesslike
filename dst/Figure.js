@@ -10,8 +10,8 @@ var FigureTypes;
     FigureTypes[FigureTypes["QUEEN"] = 5] = "QUEEN";
 })(FigureTypes || (FigureTypes = {}));
 const TypesWithSpecialMovement = [FigureTypes.PAWN, FigureTypes.KING];
-const newRule = ({ distance = null, forward = null, left = null, distanceX = null, capture = null, } = {}) => {
-    return [distance, forward, left, distanceX, capture];
+const newRule = ({ distance = null, forward = null, left = null, distanceX = null, capture = null, safe = false, } = {}) => {
+    return [distance, forward, left, distanceX, capture, safe];
 };
 const getMoveFunction = (forward, left) => {
     if (forward != null) {
@@ -29,7 +29,7 @@ const getMoveFunction = (forward, left) => {
             throw new Error("Tried running in circles. Tried moving with 'forward = null' and 'left = null', resulting in no logical step to take.");
     }
 };
-const getTiles = (p, white, board, distance = null, forward = true, left = null, distanceX = null, capture = null) => {
+const getTiles = (p, white, board, distance = null, forward = true, left = null, distanceX = null, capture = null, safe = false) => {
     let validPositions = [];
     if (distanceX != null) {
         if (distance == null)
@@ -42,10 +42,10 @@ const getTiles = (p, white, board, distance = null, forward = true, left = null,
         if (pos.dist(target, p) === 0)
             throw new Error("Tried jumping nowhere. No distances where provided, so the jump landed on the starting tile.");
         const tile = board.getTile(target);
-        if (!tile)
+        if (!tile || (safe && tile.threat.includes(white ? "b" : "w")))
             return validPositions;
         if (tile.occupied === -1 || figures[tile.occupied].white !== white)
-            board.getTile(target) && validPositions.push(target);
+            validPositions.push(target);
         return validPositions;
     }
     const move = getMoveFunction(forward, left);
@@ -53,7 +53,7 @@ const getTiles = (p, white, board, distance = null, forward = true, left = null,
     while (distance == null ? true : distance > 0) {
         target = move(target, white, 1);
         const tile = board.getTile(target);
-        if (tile == null)
+        if (tile == null || (safe && tile.threat.includes(white ? "b" : "w")))
             break;
         validPositions.push(target);
         if (tile.occupied !== -1) {
@@ -131,14 +131,14 @@ const createFigure = (type, white) => {
         case FigureTypes.KING:
             getValidMoves = function (p, board) {
                 movementRules = [
-                    { distance: 1, forward: true },
-                    { distance: 1, forward: false },
-                    { distance: 1, left: true },
-                    { distance: 1, left: false },
-                    { distance: 1, forward: true, left: true },
-                    { distance: 1, forward: true, left: false },
-                    { distance: 1, forward: false, left: true },
-                    { distance: 1, forward: false, left: false },
+                    { distance: 1, forward: true, safe: true },
+                    { distance: 1, forward: false, safe: true },
+                    { distance: 1, left: true, safe: true },
+                    { distance: 1, left: false, safe: true },
+                    { distance: 1, forward: true, left: true, safe: true },
+                    { distance: 1, forward: true, left: false, safe: true },
+                    { distance: 1, forward: false, left: true, safe: true },
+                    { distance: 1, forward: false, left: false, safe: true },
                 ];
                 let validMoves = [];
                 movementRules.forEach((rule) => {
@@ -149,16 +149,23 @@ const createFigure = (type, white) => {
                     const roock = figures[left.occupied];
                     if (!roock.moved &&
                         !this.moved &&
-                        getTiles(p, white, board, ...newRule({ left: this.white === true, capture: false })).length === 3)
+                        getTiles(p, white, board, ...newRule({
+                            left: this.white === true,
+                            capture: false,
+                            safe: true,
+                        })).length === 3)
                         validMoves.push(pos.moveHorizontal(p, white, 2, this.white === true));
                 }
                 const right = board.getTile(pos.new(board.width - 1, white ? board.height - 1 : 0));
-                console.log(right);
                 if (right && right.occupied !== -1) {
                     const roock = figures[right.occupied];
                     if (!roock.moved &&
                         !this.moved &&
-                        getTiles(p, white, board, ...newRule({ left: this.white === false, capture: false })).length === 2)
+                        getTiles(p, white, board, ...newRule({
+                            left: this.white === false,
+                            capture: false,
+                            safe: true,
+                        })).length === 2)
                         validMoves.push(pos.moveHorizontal(p, white, 2, this.white === false));
                 }
                 return validMoves;

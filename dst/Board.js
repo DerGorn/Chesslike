@@ -1,3 +1,4 @@
+import { figures } from "./index.js";
 import pos from "./Position.js";
 import tile from "./Tile.js";
 const createBoard = (width = 8, height = 8) => {
@@ -18,8 +19,30 @@ const createBoard = (width = 8, height = 8) => {
                 ? this.tiles[pos.x][pos.y]
                 : null;
         },
+        setThreat: function () {
+            this.tiles.forEach((tiles) => tiles.forEach((tile) => {
+                tile.threat = "";
+            }));
+            this.tiles.forEach((tiles) => tiles.forEach((tile) => {
+                if (tile.occupied === -1)
+                    return;
+                figures[tile.occupied].getValidMoves(tile.pos, this).forEach((p) => {
+                    const t = this.getTile(p);
+                    t.threat += figures[tile.occupied].white
+                        ? t.threat.includes("w")
+                            ? ""
+                            : "w"
+                        : t.threat.includes("b")
+                            ? ""
+                            : "b";
+                });
+            }));
+        },
         print: function () {
             console.log(this.tiles.reduce((str, tiles) => str + tiles.reduce((s, tile) => s + tile.occupied + " ", "") + "\n", "\n"));
+            console.log(this.tiles.reduce((str, tiles) => str +
+                tiles.reduce((s, tile) => s + (tile.threat === "" ? "_" : tile.threat) + " ", "") +
+                "\n", "\n"));
         },
         sprintedPawn: null,
     };

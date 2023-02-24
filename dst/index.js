@@ -18,6 +18,7 @@ const endTurn = () => {
     document
         .getElementsByTagName("body")[0]
         .style.setProperty("--curPlayer-border-color", currentPlayerWhite ? "black" : "white");
+    board.setThreat();
     console.log(currentPlayerWhite);
     board.print();
     console.log(figures);

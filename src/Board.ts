@@ -1,3 +1,4 @@
+import { figures } from "./index.js";
 import pos, { Position } from "./Position.js";
 import tile, { Tile } from "./Tile.js";
 
@@ -6,6 +7,7 @@ type Board = {
   height: number;
   tiles: Tile[][];
   getTile: (pos: Position) => Tile | null;
+  setThreat: () => void;
   sprintedPawn: Position | null;
   print: () => void;
 };
@@ -28,11 +30,45 @@ const createBoard = (width: number = 8, height: number = 8): Board => {
         ? this.tiles[pos.x][pos.y]
         : null;
     },
+    setThreat: function () {
+      this.tiles.forEach((tiles: Tile[]) =>
+        tiles.forEach((tile) => {
+          tile.threat = "";
+        })
+      );
+      this.tiles.forEach((tiles: Tile[]) =>
+        tiles.forEach((tile) => {
+          if (tile.occupied === -1) return;
+          figures[tile.occupied].getValidMoves(tile.pos, this).forEach((p) => {
+            const t: Tile = this.getTile(p);
+            t.threat += figures[tile.occupied].white
+              ? t.threat.includes("w")
+                ? ""
+                : "w"
+              : t.threat.includes("b")
+              ? ""
+              : "b";
+          });
+        })
+      );
+    },
     print: function () {
       console.log(
         this.tiles.reduce(
           (str: string, tiles: Tile[]) =>
             str + tiles.reduce((s, tile) => s + tile.occupied + " ", "") + "\n",
+          "\n"
+        )
+      );
+      console.log(
+        this.tiles.reduce(
+          (str: string, tiles: Tile[]) =>
+            str +
+            tiles.reduce(
+              (s, tile) => s + (tile.threat === "" ? "_" : tile.threat) + " ",
+              ""
+            ) +
+            "\n",
           "\n"
         )
       );

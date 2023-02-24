@@ -8,6 +8,7 @@ const tile = {
             threatened: false,
             clicked: false,
             occupied: -1,
+            threat: "",
         };
     },
 };
