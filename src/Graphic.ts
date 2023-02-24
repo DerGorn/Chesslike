@@ -3,7 +3,6 @@ import { figures } from "./index.js";
 import pos from "./Position.js";
 import { Tile } from "./Tile.js";
 
-
 const c = document.createElement("canvas");
 const context = c.getContext("2d") as CanvasRenderingContext2D;
 
@@ -51,6 +50,7 @@ const initGraphic = (width: number, height: number) => {
       (c.width - g.scale * width) / 2,
       (c.height - g.scale * height) / 2
     );
+    context.font = `${g.scale / 2}px serif`;
   };
   sizeC();
   scaleG();
@@ -60,23 +60,37 @@ const initGraphic = (width: number, height: number) => {
   });
 };
 
+const drawFigure = (
+  rect: [number, number, number, number],
+  occupied: number
+) => {
+  const fig = figures[occupied];
+  context.strokeStyle = fig.white ? "black" : "white";
+  context.fillStyle = fig.white ? "white" : "black";
+  context.lineWidth = 1;
+  context.beginPath();
+  const r = rect[2] / 2;
+  const x = rect[0] + r;
+  const y = rect[1] + r;
+  context.arc(x, y, r / 1.5, 0, 2 * Math.PI);
+  context.fill();
+  context.stroke();
+  context.fillStyle = fig.white ? "black" : "white";
+  context.fillText(
+    fig.type === FigureTypes.KNIGHT
+      ? "H"
+      : FigureTypes[fig.type][0].toUpperCase(),
+    x - g.scale / 6,
+    y + g.scale / 7
+  );
+};
+
 const drawTile = (tile: Tile) => {
   context.fillStyle = tile.white ? "white" : "black";
   const rect = g.getTileRect(tile.pos.x, tile.pos.y);
   context.fillRect(...rect);
   if (tile.occupied >= 0) {
-    context.strokeStyle = "red";
-    context.lineWidth = 1;
-    context.strokeText(
-      FigureTypes[figures[tile.occupied].type],
-      rect[0] + 20,
-      rect[1] + 30
-    );
-    context.strokeText(
-      `${figures[tile.occupied].white}`,
-      rect[0] + 20,
-      rect[1] + 50
-    );
+    drawFigure(rect, tile.occupied);
   }
 };
 
