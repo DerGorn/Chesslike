@@ -81,6 +81,7 @@ const createFigure = (type, white) => {
         return [];
     };
     let movementRules = [];
+    let special = null;
     switch (type) {
         case FigureTypes.PAWN:
             getValidMoves = function (p, board) {
@@ -98,6 +99,17 @@ const createFigure = (type, white) => {
                     pos.dist(board.sprintedPawn, p) === 1)
                     validMoves.push(pos.moveVertical(board.sprintedPawn, white));
                 return validMoves;
+            };
+            special = (board, clickedTile, clickedOn, capturePiece) => {
+                if (board.sprintedPawn &&
+                    Math.abs(pos.x(clickedTile.pos, board.sprintedPawn)) === 1 &&
+                    pos.dist(clickedTile.pos, board.sprintedPawn) === 1) {
+                    capturePiece(board.getTile(board.sprintedPawn));
+                }
+                board.sprintedPawn = null;
+                if (Math.abs(pos.y(clickedTile.pos, clickedOn.pos)) === 2) {
+                    board.sprintedPawn = clickedOn.pos;
+                }
             };
             break;
         case FigureTypes.ROOCK:
@@ -144,31 +156,45 @@ const createFigure = (type, white) => {
                 movementRules.forEach((rule) => {
                     validMoves.push(...getTiles(p, this.white, board, ...newRule(rule)));
                 });
-                const left = board.getTile(pos.new(0, white ? board.height - 1 : 0));
-                if (left && left.occupied !== -1) {
-                    const roock = figures[left.occupied];
-                    if (!roock.moved &&
-                        !this.moved &&
-                        getTiles(p, white, board, ...newRule({
-                            left: this.white === true,
-                            capture: false,
-                            safe: true,
-                        })).length === 3)
-                        validMoves.push(pos.moveHorizontal(p, white, 2, this.white === true));
-                }
-                const right = board.getTile(pos.new(board.width - 1, white ? board.height - 1 : 0));
-                if (right && right.occupied !== -1) {
-                    const roock = figures[right.occupied];
-                    if (!roock.moved &&
-                        !this.moved &&
-                        getTiles(p, white, board, ...newRule({
-                            left: this.white === false,
-                            capture: false,
-                            safe: true,
-                        })).length === 2)
-                        validMoves.push(pos.moveHorizontal(p, white, 2, this.white === false));
-                }
+                const castle = (left) => {
+                    const tile = board.getTile(pos.new(left ? 0 : board.width - 1, white ? board.height - 1 : 0));
+                    if (tile && tile.occupied !== -1) {
+                        const roock = figures[tile.occupied];
+                        if (!roock.moved &&
+                            !this.moved &&
+                            getTiles(p, white, board, ...newRule({
+                                left: this.white === left,
+                                capture: false,
+                                safe: true,
+                            })).length === (left ? 3 : 2))
+                            validMoves.push(pos.moveHorizontal(p, white, 2, this.white === left));
+                    }
+                };
+                castle(true);
+                castle(false);
                 return validMoves;
+            };
+            special = (board, clickedTile, clickedOn) => {
+                const dist = pos.x(clickedTile.pos, clickedOn.pos);
+                const white = figures[clickedTile.occupied].white;
+                if (dist === 2) {
+                    const left = board.getTile(pos.new(0, white ? board.height - 1 : 0));
+                    if (left) {
+                        const rook = left.occupied;
+                        left.occupied = -1;
+                        const target = board.getTile(pos.add(clickedOn.pos, pos.new(1, 0)));
+                        target && (target.occupied = rook);
+                    }
+                }
+                else if (dist === -2) {
+                    const right = board.getTile(pos.new(board.width - 1, white ? board.height - 1 : 0));
+                    if (right) {
+                        const rook = right.occupied;
+                        right.occupied = -1;
+                        const target = board.getTile(pos.add(clickedOn.pos, pos.new(-1, 0)));
+                        target && (target.occupied = rook);
+                    }
+                }
             };
             break;
         case FigureTypes.QUEEN:
@@ -192,7 +218,7 @@ const createFigure = (type, white) => {
             });
             return validMoves;
         };
-    return { getValidMoves, type, white, moved: false };
+    return { getValidMoves, type, white, moved: false, special };
 };
 const createFigures = () => {
     return [

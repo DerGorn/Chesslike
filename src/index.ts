@@ -2,10 +2,16 @@ import { createBoard, initFigures } from "./Board.js";
 import { createFigures, FigureTypes } from "./Figure.js";
 import { drawBoard, initGraphic, getBoardPos } from "./Graphic.js";
 import { Tile } from "./Tile.js";
-import pos, { Position } from "./Position.js";
+import { Position } from "./Position.js";
 
 const curPlayer = document.createElement("div");
 curPlayer.classList.add("curPlayer");
+const setCurPlayerStyle = (white: boolean) => {
+  curPlayer.style.color = white ? "white" : "black";
+  document
+    .getElementsByTagName("body")[0]
+    .style.setProperty("--curPlayer-border-color", white ? "black" : "white");
+};
 document.getElementsByTagName("body")[0].append(curPlayer);
 
 const FPSTARGET = 30;
@@ -20,15 +26,8 @@ let threatenedKings: Position[] = [];
 
 const endGame = () => {
   window.removeEventListener("click", mouseControll);
-  curPlayer.style.color = currentPlayerWhite ? "black" : "white";
+  setCurPlayerStyle(!currentPlayerWhite);
   curPlayer.innerText = (currentPlayerWhite ? "Black" : "White") + " won!!";
-  document
-    .getElementsByTagName("body")[0]
-    .style.setProperty(
-      "--curPlayer-border-color",
-      currentPlayerWhite ? "white" : "black"
-    );
-  console.log("Loser is white: ", currentPlayerWhite);
 };
 
 const endTurn = () => {
@@ -46,14 +45,8 @@ const endTurn = () => {
   if (end) return;
   threatenedKings = newThreatenedKings;
   currentPlayerWhite = !currentPlayerWhite;
-  curPlayer.style.color = currentPlayerWhite ? "white" : "black";
+  setCurPlayerStyle(currentPlayerWhite);
   curPlayer.innerText = currentPlayerWhite ? "Whites turn" : "Blacks turn";
-  document
-    .getElementsByTagName("body")[0]
-    .style.setProperty(
-      "--curPlayer-border-color",
-      currentPlayerWhite ? "black" : "white"
-    );
   board.print();
   console.log(figures);
 };
@@ -61,7 +54,7 @@ endTurn();
 
 let clickedTile: Tile | null = null;
 
-const mouseControll = (event) => {
+const mouseControll = (event: MouseEvent) => {
   const clickedOn = board.getTile(getBoardPos(event.clientX, event.clientY));
   const setClickedTileState = (state: boolean) => {
     if (!clickedTile) return;
@@ -98,45 +91,17 @@ const mouseControll = (event) => {
     )
       return;
     setClickedTileState(false);
-    //en passant
-    if (
-      figures[clickedTile.occupied].type === FigureTypes.PAWN &&
-      board.sprintedPawn &&
-      Math.abs(pos.x(clickedTile.pos, board.sprintedPawn)) === 1 &&
-      pos.dist(clickedTile.pos, board.sprintedPawn) === 1
-    ) {
-      capturePiece(board.getTile(board.sprintedPawn) as Tile);
-    }
-    //sprintedPawn
-    board.sprintedPawn = null;
-    if (
-      figures[clickedTile.occupied].type === FigureTypes.PAWN &&
-      Math.abs(pos.y(clickedTile.pos, clickedOn.pos)) === 2
-    ) {
-      board.sprintedPawn = clickedOn.pos;
-    }
-    //castle
-    if (figures[clickedTile.occupied].type === FigureTypes.KING) {
-      const dist = pos.x(clickedTile.pos, clickedOn.pos);
-      const white = figures[clickedTile.occupied].white;
-      if (dist === 2) {
-        const left = board.getTile(pos.new(0, white ? board.height - 1 : 0));
-        if (left) {
-          const rook = left.occupied;
-          left.occupied = -1;
-          const target = board.getTile(pos.add(clickedOn.pos, pos.new(1, 0)));
-          target && (target.occupied = rook);
-        }
-      } else if (dist === -2) {
-        const right = board.getTile(
-          pos.new(board.width - 1, white ? board.height - 1 : 0)
-        );
-        if (right) {
-          const rook = right.occupied;
-          right.occupied = -1;
-          const target = board.getTile(pos.add(clickedOn.pos, pos.new(-1, 0)));
-          target && (target.occupied = rook);
-        }
+    const special = figures[clickedTile.occupied].special;
+    if (special != null) {
+      switch (figures[clickedTile.occupied].type) {
+        case FigureTypes.PAWN:
+          special(board, clickedTile, clickedOn, capturePiece);
+          break;
+        case FigureTypes.KING:
+          special(board, clickedTile, clickedOn);
+          break;
+        default:
+          throw new Error("Forgot to call 'special' in 'mouseControll'.");
       }
     }
     //move
