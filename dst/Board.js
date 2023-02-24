@@ -1,3 +1,4 @@
+import { FigureTypes } from "./Figure.js";
 import { figures } from "./index.js";
 import pos from "./Position.js";
 import tile from "./Tile.js";
@@ -22,21 +23,39 @@ const createBoard = (width = 8, height = 8) => {
         setThreat: function () {
             this.tiles.forEach((tiles) => tiles.forEach((tile) => {
                 tile.threat = "";
+                tile.threatened = false;
             }));
+            let threatenedKings = [];
             this.tiles.forEach((tiles) => tiles.forEach((tile) => {
                 if (tile.occupied === -1)
                     return;
-                figures[tile.occupied].getValidMoves(tile.pos, this).forEach((p) => {
+                const fig = figures[tile.occupied];
+                const ts = fig.type === FigureTypes.PAWN
+                    ? [
+                        pos.moveDiagonal(tile.pos, fig.white, 1, true, true),
+                        pos.moveDiagonal(tile.pos, fig.white, 1, true, false),
+                    ]
+                    : fig.getValidMoves(tile.pos, this);
+                ts.forEach((p) => {
                     const t = this.getTile(p);
-                    t.threat += figures[tile.occupied].white
+                    if (!t)
+                        return;
+                    t.threat += fig.white
                         ? t.threat.includes("w")
                             ? ""
                             : "w"
                         : t.threat.includes("b")
                             ? ""
                             : "b";
+                    if (t.occupied === -1 ||
+                        figures[t.occupied].type !== FigureTypes.KING ||
+                        !t.threat.includes(figures[t.occupied].white ? "b" : "w"))
+                        return;
+                    t.threatened = true;
+                    threatenedKings.push(t.pos);
                 });
             }));
+            return threatenedKings;
         },
         print: function () {
             console.log(this.tiles.reduce((str, tiles) => str + tiles.reduce((s, tile) => s + tile.occupied + " ", "") + "\n", "\n"));

@@ -11,21 +11,42 @@ const board = createBoard();
 initFigures(board);
 let figures = createFigures();
 initGraphic(board.width, board.height);
+let threatenedKings = [];
+const endGame = () => {
+    window.removeEventListener("click", mouseControll);
+    curPlayer.style.color = currentPlayerWhite ? "black" : "white";
+    curPlayer.innerText = (currentPlayerWhite ? "Black" : "White") + " won!!";
+    document
+        .getElementsByTagName("body")[0]
+        .style.setProperty("--curPlayer-border-color", currentPlayerWhite ? "white" : "black");
+    console.log("Loser is white: ", currentPlayerWhite);
+};
 const endTurn = () => {
+    const newThreatenedKings = board.setThreat();
+    let end = false;
+    newThreatenedKings.forEach((p) => {
+        if (!threatenedKings.includes(p))
+            return;
+        if (figures[board.getTile(p)?.occupied].white === currentPlayerWhite) {
+            endGame();
+            end = true;
+        }
+    });
+    if (end)
+        return;
+    threatenedKings = newThreatenedKings;
     currentPlayerWhite = !currentPlayerWhite;
     curPlayer.style.color = currentPlayerWhite ? "white" : "black";
     curPlayer.innerText = currentPlayerWhite ? "Whites turn" : "Blacks turn";
     document
         .getElementsByTagName("body")[0]
         .style.setProperty("--curPlayer-border-color", currentPlayerWhite ? "black" : "white");
-    board.setThreat();
-    console.log(currentPlayerWhite);
     board.print();
     console.log(figures);
 };
 endTurn();
 let clickedTile = null;
-window.addEventListener("click", (event) => {
+const mouseControll = (event) => {
     const clickedOn = board.getTile(getBoardPos(event.clientX, event.clientY));
     const setClickedTileState = (state) => {
         if (!clickedTile)
@@ -105,7 +126,8 @@ window.addEventListener("click", (event) => {
         clickedTile = clickedOn;
         setClickedTileState(true);
     }
-});
+};
+window.addEventListener("click", mouseControll);
 let lastTime = 0;
 const gameLoop = (time) => {
     const delta = time - lastTime;

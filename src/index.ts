@@ -2,7 +2,7 @@ import { createBoard, initFigures } from "./Board.js";
 import { createFigures, FigureTypes } from "./Figure.js";
 import { drawBoard, initGraphic, getBoardPos } from "./Graphic.js";
 import { Tile } from "./Tile.js";
-import pos from "./Position.js";
+import pos, { Position } from "./Position.js";
 
 const curPlayer = document.createElement("div");
 curPlayer.classList.add("curPlayer");
@@ -16,8 +16,35 @@ const board = createBoard();
 initFigures(board);
 let figures = createFigures();
 initGraphic(board.width, board.height);
+let threatenedKings: Position[] = [];
+
+const endGame = () => {
+  window.removeEventListener("click", mouseControll);
+  curPlayer.style.color = currentPlayerWhite ? "black" : "white";
+  curPlayer.innerText = (currentPlayerWhite ? "Black" : "White") + " won!!";
+  document
+    .getElementsByTagName("body")[0]
+    .style.setProperty(
+      "--curPlayer-border-color",
+      currentPlayerWhite ? "white" : "black"
+    );
+  console.log("Loser is white: ", currentPlayerWhite);
+};
 
 const endTurn = () => {
+  const newThreatenedKings = board.setThreat();
+  let end = false;
+  newThreatenedKings.forEach((p) => {
+    if (!threatenedKings.includes(p)) return;
+    if (
+      figures[board.getTile(p)?.occupied as number].white === currentPlayerWhite
+    ) {
+      endGame();
+      end = true;
+    }
+  });
+  if (end) return;
+  threatenedKings = newThreatenedKings;
   currentPlayerWhite = !currentPlayerWhite;
   curPlayer.style.color = currentPlayerWhite ? "white" : "black";
   curPlayer.innerText = currentPlayerWhite ? "Whites turn" : "Blacks turn";
@@ -27,8 +54,6 @@ const endTurn = () => {
       "--curPlayer-border-color",
       currentPlayerWhite ? "black" : "white"
     );
-  board.setThreat();
-  console.log(currentPlayerWhite);
   board.print();
   console.log(figures);
 };
@@ -36,7 +61,7 @@ endTurn();
 
 let clickedTile: Tile | null = null;
 
-window.addEventListener("click", (event) => {
+const mouseControll = (event) => {
   const clickedOn = board.getTile(getBoardPos(event.clientX, event.clientY));
   const setClickedTileState = (state: boolean) => {
     if (!clickedTile) return;
@@ -130,7 +155,9 @@ window.addEventListener("click", (event) => {
     clickedTile = clickedOn;
     setClickedTileState(true);
   }
-});
+};
+
+window.addEventListener("click", mouseControll);
 
 let lastTime = 0;
 const gameLoop = (time: number) => {
