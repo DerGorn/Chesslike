@@ -1,6 +1,6 @@
 import { Board } from "./Board.js";
 import pos, { Position } from "./Position.js";
-import { figures } from "./index.js";
+import { figures } from "./Game.js";
 import { Tile } from "./Tile.js";
 
 enum FigureTypes {
@@ -15,7 +15,11 @@ enum FigureTypes {
 const TypesWithSpecialMovement = [FigureTypes.PAWN, FigureTypes.KING];
 
 type Figure = {
-  getValidMoves: (pos: Position, board: Board) => Position[];
+  getValidMoves: (
+    pos: Position,
+    board: Board,
+    findThreatened?: boolean
+  ) => Position[];
   type: FigureTypes;
   white: boolean;
   moved: boolean;
@@ -86,6 +90,7 @@ const getMoveFunction = (
  * @param distanceX Defines behaviour for a combination of vertical and horizontal movement. If 'null' both use dstance, so the movement is diagonal. If it is a number, horizopntal movement uses this value. In addition only the specified tile will be checked, with no regard for pieces inbetween.
  * @param capture Defines the capture mode. Standard is 'null', which is the normal behaviour, that allows capture. 'false' forbids captures, for example the forward movement of a pawn. 'true' only allows moves that capture, for example diagonal movement of a pawn.
  * @param safe Activates safe Movement. If 'true' tiles that are threatened by the opponent are not valid. This is the normal movement of the king.
+ * @param findThreatened Sets the mode to finding the threatened tiles. Some moves that may be illegal, will become valid with this. For example: Moves that threaten own pieces, or tiles next to the king, that are threatened by the other player
  */
 const getTiles = (
   p: Position,
@@ -96,9 +101,11 @@ const getTiles = (
   left: boolean | null = null,
   distanceX: number | null = null,
   capture: boolean | null = null,
-  safe: boolean = false
+  safe: boolean = false,
+  findThreatened: boolean = false
 ): Position[] => {
   let validPositions: Position[] = [];
+  if (capture === false && findThreatened) return validPositions;
   if (distanceX != null) {
     if (distance == null)
       throw new Error(
@@ -114,9 +121,16 @@ const getTiles = (
         "Tried jumping nowhere. No distances where provided, so the jump landed on the starting tile."
       );
     const tile = board.getTile(target);
-    if (!tile || (safe && tile.threat.includes(white ? "b" : "w")))
+    if (
+      !tile ||
+      (!findThreatened && safe && tile.threat.includes(white ? "b" : "w"))
+    )
       return validPositions;
-    if (tile.occupied === -1 || figures[tile.occupied].white !== white)
+    if (
+      findThreatened ||
+      tile.occupied === -1 ||
+      figures[tile.occupied].white !== white
+    )
       validPositions.push(target);
     return validPositions;
   }
@@ -125,15 +139,20 @@ const getTiles = (
   while (distance == null ? true : distance > 0) {
     target = move(target, white, 1);
     const tile = board.getTile(target);
-    if (tile == null || (safe && tile.threat.includes(white ? "b" : "w")))
+    if (tile == null || (safe && tile.threat.includes(white ? "b" : "w"))) {
+      if (findThreatened) validPositions.push(target);
       break;
+    }
     validPositions.push(target);
     if (tile.occupied !== -1) {
-      if (capture === false || figures[tile.occupied].white === white)
+      if (
+        capture === false ||
+        (!findThreatened && figures[tile.occupied].white === white)
+      )
         validPositions.pop();
       break;
     }
-    if (capture === true) {
+    if (!findThreatened && capture === true) {
       if (tile.occupied === -1) validPositions.pop();
       else {
         if (figures[tile.occupied].white === white) {
@@ -148,15 +167,23 @@ const getTiles = (
 };
 
 const createFigure = (type: FigureTypes, white: boolean): Figure => {
-  let getValidMoves = (pos: Position, board: Board): Position[] => {
-    console.log(pos, board);
+  let getValidMoves = (
+    pos: Position,
+    board: Board,
+    findThreatened = false
+  ): Position[] => {
+    console.log(pos, board, findThreatened);
     return [];
   };
   let movementRules: Rule[] = [];
   let special: Function | null = null;
   switch (type) {
     case FigureTypes.PAWN:
-      getValidMoves = function (p: Position, board: Board) {
+      getValidMoves = function (
+        p: Position,
+        board: Board,
+        findThreatened = false
+      ) {
         movementRules = [
           { distance: this.moved ? 1 : 2, forward: true, capture: false },
           { distance: 1, forward: true, left: true, capture: true },
@@ -164,7 +191,9 @@ const createFigure = (type: FigureTypes, white: boolean): Figure => {
         ];
         let validMoves: Position[] = [];
         movementRules.forEach((rule) => {
-          validMoves.push(...getTiles(p, this.white, board, ...newRule(rule)));
+          validMoves.push(
+            ...getTiles(p, this.white, board, ...newRule(rule), findThreatened)
+          );
         });
         if (
           board.sprintedPawn &&
@@ -224,7 +253,11 @@ const createFigure = (type: FigureTypes, white: boolean): Figure => {
       ];
       break;
     case FigureTypes.KING:
-      getValidMoves = function (p: Position, board: Board) {
+      getValidMoves = function (
+        p: Position,
+        board: Board,
+        findThreatened = false
+      ) {
         movementRules = [
           { distance: 1, forward: true, safe: true },
           { distance: 1, forward: false, safe: true },
@@ -237,9 +270,12 @@ const createFigure = (type: FigureTypes, white: boolean): Figure => {
         ];
         let validMoves: Position[] = [];
         movementRules.forEach((rule) => {
-          validMoves.push(...getTiles(p, this.white, board, ...newRule(rule)));
+          validMoves.push(
+            ...getTiles(p, this.white, board, ...newRule(rule), findThreatened)
+          );
         });
         const castle = (left: boolean) => {
+          if (board.getTile(p)?.threat.includes(white ? "b" : "w")) return;
           const tile = board.getTile(
             pos.new(left ? 0 : board.width - 1, white ? board.height - 1 : 0)
           );
@@ -308,10 +344,16 @@ const createFigure = (type: FigureTypes, white: boolean): Figure => {
       break;
   }
   if (!TypesWithSpecialMovement.includes(type))
-    getValidMoves = function (p: Position, board: Board) {
+    getValidMoves = function (
+      p: Position,
+      board: Board,
+      findThreatened = false
+    ) {
       let validMoves: Position[] = [];
       movementRules.forEach((rule) => {
-        validMoves.push(...getTiles(p, this.white, board, ...newRule(rule)));
+        validMoves.push(
+          ...getTiles(p, this.white, board, ...newRule(rule), findThreatened)
+        );
       });
       return validMoves;
     };
@@ -355,4 +397,4 @@ const createFigures = (): Figure[] => {
   ].map((x) => createFigure(x[0], x[1]));
 };
 
-export { createFigure, createFigures, FigureTypes };
+export { createFigure, createFigures, FigureTypes, Figure };

@@ -1,5 +1,5 @@
 import { FigureTypes } from "./Figure.js";
-import { figures } from "./index.js";
+import { figures } from "./Game.js";
 import pos, { Position } from "./Position.js";
 import tile, { Tile } from "./Tile.js";
 
@@ -43,13 +43,7 @@ const createBoard = (width: number = 8, height: number = 8): Board => {
         tiles.forEach((tile) => {
           if (tile.occupied === -1) return;
           const fig = figures[tile.occupied];
-          const ts =
-            fig.type === FigureTypes.PAWN
-              ? [
-                  pos.moveDiagonal(tile.pos, fig.white, 1, true, true),
-                  pos.moveDiagonal(tile.pos, fig.white, 1, true, false),
-                ]
-              : fig.getValidMoves(tile.pos, this);
+          const ts = fig.getValidMoves(tile.pos, this, true);
           ts.forEach((p) => {
             const t: Tile = this.getTile(p);
             if (!t) return;

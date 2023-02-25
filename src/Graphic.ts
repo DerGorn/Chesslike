@@ -1,5 +1,6 @@
 import { FigureTypes } from "./Figure.js";
-import { figures } from "./index.js";
+import { figures } from "./Game.js";
+import { body } from "./index.js";
 import pos from "./Position.js";
 import { Tile } from "./Tile.js";
 
@@ -31,7 +32,7 @@ const getBoardPos = (x: number, y: number) => {
 };
 
 const initGraphic = (width: number, height: number) => {
-  document.getElementsByTagName("body")[0].append(c);
+  body.append(c);
   const sizeC = () => {
     c.width = window.innerWidth;
     c.height = window.innerHeight;
@@ -119,4 +120,8 @@ const drawBoard = (tiles: Tile[][]) => {
   tiles.forEach((tiles) => tiles.forEach((tile) => highlightTile(tile)));
 };
 
-export { initGraphic, drawBoard, getBoardPos };
+const closeGraphics = () => {
+  c.remove();
+};
+
+export { initGraphic, drawBoard, getBoardPos, closeGraphics };

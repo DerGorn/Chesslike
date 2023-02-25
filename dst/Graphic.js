@@ -1,5 +1,6 @@
 import { FigureTypes } from "./Figure.js";
-import { figures } from "./index.js";
+import { figures } from "./Game.js";
+import { body } from "./index.js";
 import pos from "./Position.js";
 const c = document.createElement("canvas");
 const context = c.getContext("2d");
@@ -18,7 +19,7 @@ const getBoardPos = (x, y) => {
     return pos.new(...Object.values(pos.scale(1 / g.scale, pos.add(pos.new(x, y), pos.scale(-1, g.origin)))).map((x) => Math.floor(x)));
 };
 const initGraphic = (width, height) => {
-    document.getElementsByTagName("body")[0].append(c);
+    body.append(c);
     const sizeC = () => {
         c.width = window.innerWidth;
         c.height = window.innerHeight;
@@ -81,4 +82,7 @@ const drawBoard = (tiles) => {
     tiles.forEach((tiles) => tiles.forEach((tile) => drawTile(tile)));
     tiles.forEach((tiles) => tiles.forEach((tile) => highlightTile(tile)));
 };
-export { initGraphic, drawBoard, getBoardPos };
+const closeGraphics = () => {
+    c.remove();
+};
+export { initGraphic, drawBoard, getBoardPos, closeGraphics };
