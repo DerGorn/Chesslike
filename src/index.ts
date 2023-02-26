@@ -1,4 +1,4 @@
-import { revertTurn, startGame } from "./Game.js";
+import { startGame } from "./Game.js";
 
 const createEl = (
   id: string = "",
@@ -44,10 +44,6 @@ const mainMenu = () => {
 
 console.log(mainMenu);
 // mainMenu();
-const back = createEl("", "div", "menuButton");
-back.innerText = "back";
-back.addEventListener("click", revertTurn);
-body.append(back);
 startGame();
 
 export { body, createEl };

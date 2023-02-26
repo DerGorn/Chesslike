@@ -1,4 +1,4 @@
-import { revertTurn, startGame } from "./Game.js";
+import { startGame } from "./Game.js";
 const createEl = (id = "", type = "div", ...classes) => {
     const el = document.createElement(type);
     el.id = id;
@@ -23,9 +23,5 @@ const mainMenu = () => {
     menuBody.style.height = `calc(100vh - ${title.getBoundingClientRect().height}px)`;
 };
 console.log(mainMenu);
-const back = createEl("", "div", "menuButton");
-back.innerText = "back";
-back.addEventListener("click", revertTurn);
-body.append(back);
 startGame();
 export { body, createEl };

@@ -1,7 +1,7 @@
 import { createBoard, initFigures } from "./Board.js";
 import { createFigures, FigureTypes } from "./Figure.js";
 import { drawBoard, initGraphic, getBoardPos, closeGraphics, } from "./Graphic.js";
-import { body } from "./index.js";
+import { body, createEl } from "./index.js";
 const history = [];
 const archiveTurn = (figure, from, to, capture = null) => {
     const last = history[history.length - 1];
@@ -13,12 +13,12 @@ const revertTurn = () => {
     const last = history.pop();
     if (!last)
         return;
-    endTurn();
     const from = board.getTile(last.to);
     const fig = from.occupied;
     from.occupied = -1;
     board.getTile(last.from).occupied = fig;
     figures[fig] = last.figure;
+    endTurn(true);
     if (!last.capture)
         return;
     figures.push(last.capture[0]);
@@ -28,26 +28,37 @@ const FPSTARGET = 30;
 let end = false;
 const curPlayer = document.createElement("div");
 curPlayer.classList.add("curPlayer");
+curPlayer.append(document.createElement("p"));
 const setCurPlayerStyle = (white) => {
     curPlayer.style.color = white ? "white" : "black";
     document
         .getElementsByTagName("body")[0]
         .style.setProperty("--curPlayer-border-color", white ? "black" : "white");
 };
+const setCurPlayerText = (text) => {
+    curPlayer.firstChild.innerText = text;
+};
 let currentPlayerWhite = false;
 let board = createBoard();
 let figures = createFigures();
 let threatenedKings = [];
 const endGame = () => {
-    window.removeEventListener("click", mouseControll);
+    if (confirm("Are you sure that was your best move? Because you lost. Would you love to revert time and try again?")) {
+        currentPlayerWhite = !currentPlayerWhite;
+        revertTurn();
+        return;
+    }
+    window.removeEventListener("click", mouseControll, true);
     setCurPlayerStyle(!currentPlayerWhite);
-    curPlayer.innerText = (currentPlayerWhite ? "Black" : "White") + " won!!";
+    setCurPlayerText((currentPlayerWhite ? "Black" : "White") + " won!!");
+    curPlayer.lastChild?.remove();
 };
-const endTurn = () => {
+const endTurn = (revert = false) => {
     threatenedKings = board.setThreat();
     let end = false;
     threatenedKings.forEach((p) => {
-        if (figures[board.getTile(p)?.occupied].white === currentPlayerWhite) {
+        if (!revert &&
+            figures[board.getTile(p)?.occupied].white === currentPlayerWhite) {
             endGame();
             end = true;
         }
@@ -56,7 +67,7 @@ const endTurn = () => {
         return;
     currentPlayerWhite = !currentPlayerWhite;
     setCurPlayerStyle(currentPlayerWhite);
-    curPlayer.innerText = currentPlayerWhite ? "White's turn" : "Black's turn";
+    setCurPlayerText(currentPlayerWhite ? "White's turn" : "Black's turn");
     board.print();
     console.log(figures);
     console.log(history);
@@ -137,6 +148,11 @@ const update = () => {
 };
 const startGame = () => {
     end = false;
+    const back = createEl("", "div", "menuButton", "outline", "outlineHover");
+    back.innerText = "back";
+    back.addEventListener("click", revertTurn);
+    back.style.fontSize = "24px";
+    curPlayer.append(back);
     body.append(curPlayer);
     currentPlayerWhite = false;
     board = createBoard();
@@ -145,7 +161,7 @@ const startGame = () => {
     initGraphic(board.width, board.height);
     threatenedKings = [];
     endTurn();
-    window.addEventListener("click", mouseControll);
+    window.addEventListener("click", mouseControll, true);
     window.requestAnimationFrame(gameLoop);
 };
 const closeGame = () => {

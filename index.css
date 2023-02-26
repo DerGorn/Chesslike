@@ -19,6 +19,7 @@ body {
 }
 
 .outline {
+  color: white;
   text-shadow: 2px 2px 2px black, -2px -2px 2px black, 2px 0 2px black,
     -2px 0 2px black;
 }
@@ -74,4 +75,5 @@ canvas {
     -4px 4px 4px var(--curPlayer-border-color),
     -4px 0 4px var(--curPlayer-border-color);
   transition: color 1s, text-shadow 1s;
+  gap: 10px;
 }
