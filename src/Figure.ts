@@ -212,12 +212,13 @@ const createFigure = (type: FigureTypes, white: boolean): Figure => {
         //en passant
         if (
           board.sprintedPawn &&
-          Math.abs(pos.x(clickedTile.pos, board.sprintedPawn)) === 1 &&
+          Math.abs(pos.x(clickedTile.pos, clickedOn.pos)) === 1 &&
           pos.dist(clickedTile.pos, board.sprintedPawn) === 1
         ) {
           capturePiece(board.getTile(board.sprintedPawn) as Tile);
         }
         //sprintedPawn
+        capturePiece(clickedOn);
         board.sprintedPawn = null;
         if (Math.abs(pos.y(clickedTile.pos, clickedOn.pos)) === 2) {
           board.sprintedPawn = clickedOn.pos;

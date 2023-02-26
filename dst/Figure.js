@@ -111,10 +111,11 @@ const createFigure = (type, white) => {
             };
             special = (board, clickedTile, clickedOn, capturePiece) => {
                 if (board.sprintedPawn &&
-                    Math.abs(pos.x(clickedTile.pos, board.sprintedPawn)) === 1 &&
+                    Math.abs(pos.x(clickedTile.pos, clickedOn.pos)) === 1 &&
                     pos.dist(clickedTile.pos, board.sprintedPawn) === 1) {
                     capturePiece(board.getTile(board.sprintedPawn));
                 }
+                capturePiece(clickedOn);
                 board.sprintedPawn = null;
                 if (Math.abs(pos.y(clickedTile.pos, clickedOn.pos)) === 2) {
                     board.sprintedPawn = clickedOn.pos;

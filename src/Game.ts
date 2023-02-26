@@ -15,6 +15,7 @@ type Turn = {
   from: Position;
   to: Position;
   capture: [Figure, Position] | null;
+  sprintedPawn: Position | null;
 };
 
 const history: Turn[] = [];
@@ -23,11 +24,13 @@ const archiveTurn = (
   figure: Figure,
   from: Position,
   to: Position,
-  capture: [Figure, Position] | null = null
+  capture: [Figure, Position] | null = null,
+  sprintedPawn = board.sprintedPawn
 ) => {
   const last = history[history.length - 1];
   if (last && last.from === from && last.to === to) return;
-  history.push({ figure, from, to, capture });
+  console.log(sprintedPawn);
+  history.push({ figure, from, to, capture, sprintedPawn });
 };
 
 const revertTurn = () => {
@@ -38,6 +41,7 @@ const revertTurn = () => {
   from.occupied = -1;
   (board.getTile(last.from) as Tile).occupied = fig;
   figures[fig] = last.figure;
+  board.sprintedPawn = last.sprintedPawn;
   endTurn(true);
   if (!last.capture) return;
   figures.push(last.capture[0]);

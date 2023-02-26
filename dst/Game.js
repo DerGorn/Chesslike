@@ -3,11 +3,12 @@ import { createFigures, FigureTypes } from "./Figure.js";
 import { drawBoard, initGraphic, getBoardPos, closeGraphics, } from "./Graphic.js";
 import { body, createEl } from "./index.js";
 const history = [];
-const archiveTurn = (figure, from, to, capture = null) => {
+const archiveTurn = (figure, from, to, capture = null, sprintedPawn = board.sprintedPawn) => {
     const last = history[history.length - 1];
     if (last && last.from === from && last.to === to)
         return;
-    history.push({ figure, from, to, capture });
+    console.log(sprintedPawn);
+    history.push({ figure, from, to, capture, sprintedPawn });
 };
 const revertTurn = () => {
     const last = history.pop();
@@ -18,6 +19,7 @@ const revertTurn = () => {
     from.occupied = -1;
     board.getTile(last.from).occupied = fig;
     figures[fig] = last.figure;
+    board.sprintedPawn = last.sprintedPawn;
     endTurn(true);
     if (!last.capture)
         return;
