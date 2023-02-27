@@ -3,11 +3,11 @@ import { createFigures, FigureTypes } from "./Figure.js";
 import { drawBoard, initGraphic, getBoardPos, closeGraphics, } from "./Graphic.js";
 import { body, createEl } from "./index.js";
 const history = [];
-const archiveTurn = (figure, from, to, capture = null, sprintedPawn = board.sprintedPawn) => {
+const archiveTurn = (figure, from, to, capture = null, sprintedPawn = board.sprintedPawn, castle = null) => {
     const last = history[history.length - 1];
     if (last && last.from === from && last.to === to)
         return;
-    history.push({ figure, from, to, capture, sprintedPawn });
+    history.push({ figure, from, to, capture, sprintedPawn, castle });
 };
 const revertTurn = () => {
     const last = history.pop();
@@ -19,11 +19,19 @@ const revertTurn = () => {
     board.getTile(last.from).occupied = fig;
     figures[fig] = last.figure;
     board.sprintedPawn = last.sprintedPawn;
+    if (last.capture) {
+        figures.push(last.capture[0]);
+        board.getTile(last.capture[1]).occupied = figures.length - 1;
+    }
+    if (last.castle) {
+        const l = last.castle;
+        const from = board.getTile(l.to);
+        const fig = from.occupied;
+        from.occupied = -1;
+        board.getTile(l.from).occupied = fig;
+        figures[fig] = l.figure;
+    }
     endTurn(true);
-    if (!last.capture)
-        return;
-    figures.push(last.capture[0]);
-    board.getTile(last.capture[1]).occupied = figures.length - 1;
 };
 const FPSTARGET = 30;
 let end = false;
@@ -166,4 +174,4 @@ const closeGame = () => {
     curPlayer.remove();
     closeGraphics();
 };
-export { figures, currentPlayerWhite, startGame, closeGame, revertTurn, mouseControll, };
+export { figures, currentPlayerWhite, startGame, closeGame, revertTurn, mouseControll, archiveTurn, };

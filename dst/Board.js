@@ -63,7 +63,7 @@ const createBoard = (width = 8, height = 8) => {
 };
 const initFigures = (board) => {
     [
-        pos.new(0, 1),
+        pos.new(0, 6),
         pos.new(1, 6),
         pos.new(2, 6),
         pos.new(3, 6),
@@ -79,7 +79,7 @@ const initFigures = (board) => {
         pos.new(5, 7),
         pos.new(6, 7),
         pos.new(7, 7),
-        pos.new(0, 6),
+        pos.new(0, 1),
         pos.new(1, 1),
         pos.new(2, 1),
         pos.new(3, 1),

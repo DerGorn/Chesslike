@@ -16,6 +16,7 @@ type Turn = {
   to: Position;
   capture: [Figure, Position] | null;
   sprintedPawn: Position | null;
+  castle: Turn | null;
 };
 
 const history: Turn[] = [];
@@ -25,11 +26,12 @@ const archiveTurn = (
   from: Position,
   to: Position,
   capture: [Figure, Position] | null = null,
-  sprintedPawn = board.sprintedPawn
+  sprintedPawn = board.sprintedPawn,
+  castle: Turn | null = null
 ) => {
   const last = history[history.length - 1];
   if (last && last.from === from && last.to === to) return;
-  history.push({ figure, from, to, capture, sprintedPawn });
+  history.push({ figure, from, to, capture, sprintedPawn, castle });
 };
 
 const revertTurn = () => {
@@ -41,10 +43,19 @@ const revertTurn = () => {
   (board.getTile(last.from) as Tile).occupied = fig;
   figures[fig] = last.figure;
   board.sprintedPawn = last.sprintedPawn;
+  if (last.capture) {
+    figures.push(last.capture[0]);
+    (board.getTile(last.capture[1]) as Tile).occupied = figures.length - 1;
+  }
+  if (last.castle) {
+    const l = last.castle;
+    const from = board.getTile(l.to) as Tile;
+    const fig = from.occupied;
+    from.occupied = -1;
+    (board.getTile(l.from) as Tile).occupied = fig;
+    figures[fig] = l.figure;
+  }
   endTurn(true);
-  if (!last.capture) return;
-  figures.push(last.capture[0]);
-  (board.getTile(last.capture[1]) as Tile).occupied = figures.length - 1;
 };
 
 const FPSTARGET = 30;
@@ -230,4 +241,5 @@ export {
   closeGame,
   revertTurn,
   mouseControll,
+  archiveTurn,
 };

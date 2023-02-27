@@ -1,6 +1,6 @@
 import { Board } from "./Board.js";
 import pos, { Position } from "./Position.js";
-import { figures } from "./Game.js";
+import { archiveTurn, figures } from "./Game.js";
 import { Tile } from "./Tile.js";
 import { createConfirm } from "./index.js";
 
@@ -325,29 +325,34 @@ const createFigure = (type: FigureTypes, white: boolean): Figure => {
         return validMoves;
       };
       special = (board: Board, clickedTile: Tile, clickedOn: Tile) => {
-        const dist = pos.x(clickedTile.pos, clickedOn.pos);
+        const dist = pos.x(clickedTile.pos, clickedOn.pos) / 2;
         const white = figures[clickedTile.occupied].white;
-        if (dist === 2) {
-          const left = board.getTile(pos.new(0, white ? board.height - 1 : 0));
-          if (left) {
-            const rook = left.occupied;
-            left.occupied = -1;
-            const target = board.getTile(pos.add(clickedOn.pos, pos.new(1, 0)));
-            target && (target.occupied = rook);
+        if (dist !== 1 && dist !== -1) return;
+        const left = dist > 0 ? true : false;
+        const target = board.getTile(
+          pos.new(left ? 0 : board.width - 1, white ? board.height - 1 : 0)
+        );
+        if (!target) return;
+        const rook = target.occupied;
+        target.occupied = -1;
+        const t = board.getTile(pos.add(clickedOn.pos, pos.new(dist, 0)));
+        if (!t) return;
+        t.occupied = rook;
+        archiveTurn(
+          { ...figures[clickedTile.occupied] },
+          clickedTile.pos,
+          clickedOn.pos,
+          null,
+          board.sprintedPawn,
+          {
+            figure: { ...figures[rook] },
+            from: target.pos,
+            to: t.pos,
+            capture: null,
+            sprintedPawn: null,
+            castle: null,
           }
-        } else if (dist === -2) {
-          const right = board.getTile(
-            pos.new(board.width - 1, white ? board.height - 1 : 0)
-          );
-          if (right) {
-            const rook = right.occupied;
-            right.occupied = -1;
-            const target = board.getTile(
-              pos.add(clickedOn.pos, pos.new(-1, 0))
-            );
-            target && (target.occupied = rook);
-          }
-        }
+        );
       };
       break;
     case FigureTypes.QUEEN:
