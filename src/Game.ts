@@ -112,9 +112,9 @@ const endTurn = (revert = false) => {
   currentPlayerWhite = !currentPlayerWhite;
   setCurPlayerStyle(currentPlayerWhite);
   setCurPlayerText(currentPlayerWhite ? "White's turn" : "Black's turn");
-  // board.print();
-  // console.log(figures);
-  // console.log(history);
+  board.print();
+  console.log(figures);
+  console.log(history);
 };
 
 let clickedTile: Tile | null = null;
@@ -163,7 +163,7 @@ const mouseControll = async (event: MouseEvent) => {
     )
       return;
     setClickedTileState(false);
-    //SPecial
+    //Special
     const special = figures[clickedTile.occupied].special;
     if (special != null) {
       switch (figures[clickedTile.occupied].type) {

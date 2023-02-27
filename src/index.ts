@@ -82,6 +82,5 @@ const mainMenu = () => {
 console.log(mainMenu);
 // mainMenu();
 startGame();
-// createConfirm("zesz", { x: 100, y: 100 }, "Queen", "Bishop", "Knight", "Rook");
 
 export { body, createEl, createConfirm };

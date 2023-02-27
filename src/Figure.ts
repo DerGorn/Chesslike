@@ -233,13 +233,11 @@ const createFigure = (type: FigureTypes, white: boolean): Figure => {
             FigureTypes.KNIGHT,
             FigureTypes.ROOCK,
           ];
-          console.log(event);
           const res = await createConfirm(
             "promotion",
             { x: event.clientX, y: event.clientY },
             ...options.map((type) => FigureTypes[type])
           );
-          console.log(res);
           figures[clickedTile.occupied] = createFigure(options[res], white);
         }
       };
