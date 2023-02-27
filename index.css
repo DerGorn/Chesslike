@@ -77,3 +77,30 @@ canvas {
   transition: color 1s, text-shadow 1s;
   gap: 10px;
 }
+
+.inputCatch {
+  position: absolute;
+  z-index: 100;
+  left: 0;
+  top: 0;
+  width: 100vw;
+  height: 100vh;
+}
+
+.popUp {
+  width: fit-content;
+  max-width: 90vw;
+  height: fit-content;
+  max-height: 90vh;
+  padding: 20px;
+  border: 2px solid black;
+  border-radius: var(--border-radius);
+  gap: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: absolute;
+  z-index: 100;
+  background-color: #003153;
+}

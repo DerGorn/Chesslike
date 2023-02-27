@@ -1,5 +1,6 @@
 import pos from "./Position.js";
 import { figures } from "./Game.js";
+import { createConfirm } from "./index.js";
 var FigureTypes;
 (function (FigureTypes) {
     FigureTypes[FigureTypes["PAWN"] = 0] = "PAWN";
@@ -109,7 +110,7 @@ const createFigure = (type, white) => {
                     validMoves.push(pos.moveVertical(board.sprintedPawn, white));
                 return validMoves;
             };
-            special = (board, clickedTile, clickedOn, capturePiece) => {
+            special = async (board, clickedTile, clickedOn, capturePiece, event) => {
                 if (board.sprintedPawn &&
                     Math.abs(pos.x(clickedTile.pos, clickedOn.pos)) === 1 &&
                     pos.dist(clickedTile.pos, board.sprintedPawn) === 1) {
@@ -119,6 +120,18 @@ const createFigure = (type, white) => {
                 board.sprintedPawn = null;
                 if (Math.abs(pos.y(clickedTile.pos, clickedOn.pos)) === 2) {
                     board.sprintedPawn = clickedOn.pos;
+                }
+                if (clickedOn.pos.y === (white ? 0 : board.height - 1)) {
+                    const options = [
+                        FigureTypes.QUEEN,
+                        FigureTypes.BISHOP,
+                        FigureTypes.KNIGHT,
+                        FigureTypes.ROOCK,
+                    ];
+                    console.log(event);
+                    const res = await createConfirm("promotion", { x: event.clientX, y: event.clientY }, ...options.map((type) => FigureTypes[type]));
+                    console.log(res);
+                    figures[clickedTile.occupied] = createFigure(options[res], white);
                 }
             };
             break;

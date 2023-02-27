@@ -7,7 +7,6 @@ const archiveTurn = (figure, from, to, capture = null, sprintedPawn = board.spri
     const last = history[history.length - 1];
     if (last && last.from === from && last.to === to)
         return;
-    console.log(sprintedPawn);
     history.push({ figure, from, to, capture, sprintedPawn });
 };
 const revertTurn = () => {
@@ -70,12 +69,9 @@ const endTurn = (revert = false) => {
     currentPlayerWhite = !currentPlayerWhite;
     setCurPlayerStyle(currentPlayerWhite);
     setCurPlayerText(currentPlayerWhite ? "White's turn" : "Black's turn");
-    board.print();
-    console.log(figures);
-    console.log(history);
 };
 let clickedTile = null;
-const mouseControll = (event) => {
+const mouseControll = async (event) => {
     const clickedOn = board.getTile(getBoardPos(event.clientX, event.clientY));
     const setClickedTileState = (state) => {
         if (!clickedTile)
@@ -113,7 +109,7 @@ const mouseControll = (event) => {
         if (special != null) {
             switch (figures[clickedTile.occupied].type) {
                 case FigureTypes.PAWN:
-                    special(board, clickedTile, clickedOn, capturePiece);
+                    await special(board, clickedTile, clickedOn, capturePiece, event);
                     break;
                 case FigureTypes.KING:
                     special(board, clickedTile, clickedOn);
@@ -170,4 +166,4 @@ const closeGame = () => {
     curPlayer.remove();
     closeGraphics();
 };
-export { figures, currentPlayerWhite, startGame, closeGame, revertTurn };
+export { figures, currentPlayerWhite, startGame, closeGame, revertTurn, mouseControll, };

@@ -2,6 +2,7 @@ import { Board } from "./Board.js";
 import pos, { Position } from "./Position.js";
 import { figures } from "./Game.js";
 import { Tile } from "./Tile.js";
+import { createConfirm } from "./index.js";
 
 enum FigureTypes {
   PAWN,
@@ -203,11 +204,12 @@ const createFigure = (type: FigureTypes, white: boolean): Figure => {
           validMoves.push(pos.moveVertical(board.sprintedPawn, white));
         return validMoves;
       };
-      special = (
+      special = async (
         board: Board,
         clickedTile: Tile,
         clickedOn: Tile,
-        capturePiece: Function
+        capturePiece: Function,
+        event: MouseEvent
       ) => {
         //en passant
         if (
@@ -222,6 +224,23 @@ const createFigure = (type: FigureTypes, white: boolean): Figure => {
         board.sprintedPawn = null;
         if (Math.abs(pos.y(clickedTile.pos, clickedOn.pos)) === 2) {
           board.sprintedPawn = clickedOn.pos;
+        }
+        //promotion
+        if (clickedOn.pos.y === (white ? 0 : board.height - 1)) {
+          const options = [
+            FigureTypes.QUEEN,
+            FigureTypes.BISHOP,
+            FigureTypes.KNIGHT,
+            FigureTypes.ROOCK,
+          ];
+          console.log(event);
+          const res = await createConfirm(
+            "promotion",
+            { x: event.clientX, y: event.clientY },
+            ...options.map((type) => FigureTypes[type])
+          );
+          console.log(res);
+          figures[clickedTile.occupied] = createFigure(options[res], white);
         }
       };
       break;

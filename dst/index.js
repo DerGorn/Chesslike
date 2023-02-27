@@ -1,9 +1,33 @@
-import { startGame } from "./Game.js";
+import { mouseControll, startGame } from "./Game.js";
 const createEl = (id = "", type = "div", ...classes) => {
     const el = document.createElement(type);
     el.id = id;
     el.classList.add(...classes);
     return el;
+};
+const createConfirm = async (id = "", pos = { x: 0, y: 0 }, ...options) => {
+    return new Promise((resolve) => {
+        const inputCatch = createEl(id, "div", "inputCatch");
+        window.removeEventListener("click", mouseControll, true);
+        const confirm = createEl("", "div", "popUp");
+        confirm.append(...options.map((option, i) => {
+            const text = createEl(`option${i}`, "div", "menuButton", "outline", "outlineHover");
+            if (typeof option !== "string")
+                text.append(option);
+            else
+                text.innerText = option;
+            text.addEventListener("click", () => {
+                window.addEventListener("click", mouseControll, true);
+                inputCatch.remove();
+                resolve(i);
+            });
+            return text;
+        }));
+        confirm.style.left = `${pos.x}px`;
+        confirm.style.top = `${pos.y}px`;
+        inputCatch.append(confirm);
+        body.append(inputCatch);
+    });
 };
 const body = document.getElementsByTagName("body")[0];
 const mainMenu = () => {
@@ -24,4 +48,4 @@ const mainMenu = () => {
 };
 console.log(mainMenu);
 startGame();
-export { body, createEl };
+export { body, createEl, createConfirm };

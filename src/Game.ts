@@ -29,7 +29,6 @@ const archiveTurn = (
 ) => {
   const last = history[history.length - 1];
   if (last && last.from === from && last.to === to) return;
-  console.log(sprintedPawn);
   history.push({ figure, from, to, capture, sprintedPawn });
 };
 
@@ -102,14 +101,15 @@ const endTurn = (revert = false) => {
   currentPlayerWhite = !currentPlayerWhite;
   setCurPlayerStyle(currentPlayerWhite);
   setCurPlayerText(currentPlayerWhite ? "White's turn" : "Black's turn");
-  board.print();
-  console.log(figures);
-  console.log(history);
+  // board.print();
+  // console.log(figures);
+  // console.log(history);
 };
 
 let clickedTile: Tile | null = null;
 
-const mouseControll = (event: MouseEvent) => {
+const mouseControll = async (event: MouseEvent) => {
+  //Define Stuff
   const clickedOn = board.getTile(getBoardPos(event.clientX, event.clientY));
   const setClickedTileState = (state: boolean) => {
     if (!clickedTile) return;
@@ -152,11 +152,12 @@ const mouseControll = (event: MouseEvent) => {
     )
       return;
     setClickedTileState(false);
+    //SPecial
     const special = figures[clickedTile.occupied].special;
     if (special != null) {
       switch (figures[clickedTile.occupied].type) {
         case FigureTypes.PAWN:
-          special(board, clickedTile, clickedOn, capturePiece);
+          await special(board, clickedTile, clickedOn, capturePiece, event);
           break;
         case FigureTypes.KING:
           special(board, clickedTile, clickedOn);
@@ -222,4 +223,11 @@ const closeGame = () => {
   closeGraphics();
 };
 
-export { figures, currentPlayerWhite, startGame, closeGame, revertTurn };
+export {
+  figures,
+  currentPlayerWhite,
+  startGame,
+  closeGame,
+  revertTurn,
+  mouseControll,
+};
