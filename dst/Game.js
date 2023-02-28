@@ -49,7 +49,7 @@ const setCurPlayerText = (text) => {
 };
 let currentPlayerWhite = false;
 let board = createBoard();
-let figures = createFigures();
+let figures = [];
 let threatenedKings = [];
 const endGame = () => {
     if (confirm("Are you sure that was your best move? Because you lost. Would you love to revert time and try again?")) {
@@ -77,6 +77,9 @@ const endTurn = (revert = false) => {
     currentPlayerWhite = !currentPlayerWhite;
     setCurPlayerStyle(currentPlayerWhite);
     setCurPlayerText(currentPlayerWhite ? "White's turn" : "Black's turn");
+    board.print();
+    console.log("Figures", figures);
+    console.log(history);
 };
 let clickedTile = null;
 const mouseControll = async (event) => {
@@ -152,7 +155,7 @@ const gameLoop = (time) => {
 const update = () => {
     drawBoard(board.tiles);
 };
-const startGame = () => {
+const startGame = (setup = null) => {
     end = false;
     const back = createEl("", "div", "menuButton", "outline", "outlineHover");
     back.innerText = "back";
@@ -162,8 +165,14 @@ const startGame = () => {
     body.append(curPlayer);
     currentPlayerWhite = false;
     board = createBoard();
-    initFigures(board);
-    figures = createFigures();
+    if (setup)
+        initFigures(board, setup.board);
+    else
+        initFigures(board);
+    if (setup)
+        figures = createFigures(setup.figures);
+    else
+        figures = createFigures();
     initGraphic(board.width, board.height);
     threatenedKings = [];
     endTurn();

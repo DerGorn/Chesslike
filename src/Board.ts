@@ -47,7 +47,9 @@ const createBoard = (width: number = 8, height: number = 8): Board => {
           ts.forEach((p) => {
             const t: Tile = this.getTile(p);
             if (!t) return;
-            t.threat += fig.white
+            t.threat += p.condition
+              ? p.condition
+              : fig.white
               ? t.threat.includes("w")
                 ? ""
                 : "w"
@@ -92,8 +94,9 @@ const createBoard = (width: number = 8, height: number = 8): Board => {
   };
 };
 
-const initFigures = (board: Board) => {
-  [
+const initFigures = (
+  board: Board,
+  setup: Position[] = [
     pos.new(0, 6),
     pos.new(1, 6),
     pos.new(2, 6),
@@ -126,7 +129,9 @@ const initFigures = (board: Board) => {
     pos.new(5, 0),
     pos.new(6, 0),
     pos.new(7, 0),
-  ].forEach((pos, i) => {
+  ]
+) => {
+  setup.forEach((pos, i) => {
     const tile = board.getTile(pos);
     tile && (tile.occupied = i);
   });

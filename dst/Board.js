@@ -35,13 +35,15 @@ const createBoard = (width = 8, height = 8) => {
                     const t = this.getTile(p);
                     if (!t)
                         return;
-                    t.threat += fig.white
-                        ? t.threat.includes("w")
-                            ? ""
-                            : "w"
-                        : t.threat.includes("b")
-                            ? ""
-                            : "b";
+                    t.threat += p.condition
+                        ? p.condition
+                        : fig.white
+                            ? t.threat.includes("w")
+                                ? ""
+                                : "w"
+                            : t.threat.includes("b")
+                                ? ""
+                                : "b";
                     if (t.occupied === -1 ||
                         figures[t.occupied].type !== FigureTypes.KING ||
                         !t.threat.includes(figures[t.occupied].white ? "b" : "w"))
@@ -61,41 +63,41 @@ const createBoard = (width = 8, height = 8) => {
         sprintedPawn: null,
     };
 };
-const initFigures = (board) => {
-    [
-        pos.new(0, 6),
-        pos.new(1, 6),
-        pos.new(2, 6),
-        pos.new(3, 6),
-        pos.new(4, 6),
-        pos.new(5, 6),
-        pos.new(6, 6),
-        pos.new(7, 6),
-        pos.new(0, 7),
-        pos.new(1, 7),
-        pos.new(2, 7),
-        pos.new(3, 7),
-        pos.new(4, 7),
-        pos.new(5, 7),
-        pos.new(6, 7),
-        pos.new(7, 7),
-        pos.new(0, 1),
-        pos.new(1, 1),
-        pos.new(2, 1),
-        pos.new(3, 1),
-        pos.new(4, 1),
-        pos.new(5, 1),
-        pos.new(6, 1),
-        pos.new(7, 1),
-        pos.new(0, 0),
-        pos.new(1, 0),
-        pos.new(2, 0),
-        pos.new(3, 0),
-        pos.new(4, 0),
-        pos.new(5, 0),
-        pos.new(6, 0),
-        pos.new(7, 0),
-    ].forEach((pos, i) => {
+const initFigures = (board, setup = [
+    pos.new(0, 6),
+    pos.new(1, 6),
+    pos.new(2, 6),
+    pos.new(3, 6),
+    pos.new(4, 6),
+    pos.new(5, 6),
+    pos.new(6, 6),
+    pos.new(7, 6),
+    pos.new(0, 7),
+    pos.new(1, 7),
+    pos.new(2, 7),
+    pos.new(3, 7),
+    pos.new(4, 7),
+    pos.new(5, 7),
+    pos.new(6, 7),
+    pos.new(7, 7),
+    pos.new(0, 1),
+    pos.new(1, 1),
+    pos.new(2, 1),
+    pos.new(3, 1),
+    pos.new(4, 1),
+    pos.new(5, 1),
+    pos.new(6, 1),
+    pos.new(7, 1),
+    pos.new(0, 0),
+    pos.new(1, 0),
+    pos.new(2, 0),
+    pos.new(3, 0),
+    pos.new(4, 0),
+    pos.new(5, 0),
+    pos.new(6, 0),
+    pos.new(7, 0),
+]) => {
+    setup.forEach((pos, i) => {
         const tile = board.getTile(pos);
         tile && (tile.occupied = i);
     });

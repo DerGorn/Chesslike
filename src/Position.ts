@@ -1,17 +1,41 @@
 type Position = {
   x: number;
   y: number;
+  str: () => string;
+  condition?: string;
+};
+
+const posToString = (pos: Position): string => {
+  return `(${pos.x},${pos.y})`;
 };
 
 const pos = {
   new: (x: number, y: number): Position => {
-    return { x, y };
+    return {
+      x,
+      y,
+      str: function () {
+        return posToString(this);
+      },
+    };
   },
   add: (a: Position, b: Position): Position => {
-    return { x: a.x + b.x, y: a.y + b.y };
+    return {
+      x: a.x + b.x,
+      y: a.y + b.y,
+      str: function () {
+        return posToString(this);
+      },
+    };
   },
   scale: (a: number, b: Position): Position => {
-    return { x: a * b.x, y: a * b.y };
+    return {
+      x: a * b.x,
+      y: a * b.y,
+      str: function () {
+        return posToString(this);
+      },
+    };
   },
   dist: (a: Position, b: Position): number => {
     return Math.abs(pos.y(a, b)) + Math.abs(pos.x(a, b));

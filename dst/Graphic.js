@@ -16,7 +16,9 @@ const g = {
     },
 };
 const getBoardPos = (x, y) => {
-    return pos.new(...Object.values(pos.scale(1 / g.scale, pos.add(pos.new(x, y), pos.scale(-1, g.origin)))).map((x) => Math.floor(x)));
+    return pos.new(...Object.values(pos.scale(1 / g.scale, pos.add(pos.new(x, y), pos.scale(-1, g.origin))))
+        .filter((_, i) => i < 2)
+        .map((x) => Math.floor(x)));
 };
 const initGraphic = (width, height) => {
     body.append(c);

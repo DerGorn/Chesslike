@@ -27,7 +27,9 @@ const getBoardPos = (x: number, y: number) => {
   return pos.new(
     ...(Object.values(
       pos.scale(1 / g.scale, pos.add(pos.new(x, y), pos.scale(-1, g.origin)))
-    ).map((x) => Math.floor(x)) as [number, number])
+    )
+      .filter((_, i) => i < 2)
+      .map((x) => Math.floor(x as number)) as [number, number])
   );
 };
 

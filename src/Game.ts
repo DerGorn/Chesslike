@@ -77,7 +77,7 @@ const setCurPlayerText = (text: string) => {
 let currentPlayerWhite = false;
 
 let board = createBoard();
-let figures = createFigures();
+let figures: Figure[] = [];
 let threatenedKings: Position[] = [];
 
 const endGame = () => {
@@ -113,7 +113,7 @@ const endTurn = (revert = false) => {
   setCurPlayerStyle(currentPlayerWhite);
   setCurPlayerText(currentPlayerWhite ? "White's turn" : "Black's turn");
   board.print();
-  console.log(figures);
+  console.log("Figures", figures);
   console.log(history);
 };
 
@@ -206,7 +206,12 @@ const update = () => {
   drawBoard(board.tiles);
 };
 
-const startGame = () => {
+const startGame = (
+  setup: {
+    figures: [FigureTypes, boolean][];
+    board: Position[];
+  } | null = null
+) => {
   end = false;
   const back = createEl("", "div", "menuButton", "outline", "outlineHover");
   back.innerText = "back";
@@ -218,8 +223,10 @@ const startGame = () => {
   currentPlayerWhite = false;
 
   board = createBoard();
-  initFigures(board);
-  figures = createFigures();
+  if (setup) initFigures(board, setup.board);
+  else initFigures(board);
+  if (setup) figures = createFigures(setup.figures);
+  else figures = createFigures();
   initGraphic(board.width, board.height);
   threatenedKings = [];
 

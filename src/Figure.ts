@@ -76,6 +76,13 @@ const getMoveFunction = (
   }
 };
 
+const checkThreat = (tile: Tile, white: boolean, pos: Position): boolean => {
+  return (
+    tile.threat.includes(white ? "b" : "w") ||
+    tile.threat.includes(white ? `p${pos.str()}` : `v${pos.str()}`)
+  );
+};
+
 /**
  * Get all possible Moves from a starting position with some defined rules.
  * Normally all tiles in a straight line from the start to the target are valid, until either a other piece or the end of the board are reached.
@@ -106,6 +113,7 @@ const getTiles = (
   findThreatened: boolean = false
 ): Position[] => {
   let validPositions: Position[] = [];
+  let block = "";
   if (capture === false && findThreatened) return validPositions;
   if (distanceX != null) {
     if (distance == null)
@@ -122,10 +130,7 @@ const getTiles = (
         "Tried jumping nowhere. No distances where provided, so the jump landed on the starting tile."
       );
     const tile = board.getTile(target);
-    if (
-      !tile ||
-      (!findThreatened && safe && tile.threat.includes(white ? "b" : "w"))
-    )
+    if (!tile || (!findThreatened && safe && checkThreat(tile, white, p)))
       return validPositions;
     if (
       findThreatened ||
@@ -139,9 +144,10 @@ const getTiles = (
   let target = p;
   while (distance == null ? true : distance > 0) {
     target = move(target, white, 1);
+    if (block) target.condition = block;
     const tile = board.getTile(target);
-    if (tile == null || (safe && tile.threat.includes(white ? "b" : "w"))) {
-      if (findThreatened) validPositions.push(target);
+    if (!tile || (safe && checkThreat(tile, white, p))) {
+      if (tile && findThreatened) validPositions.push(target);
       break;
     }
     validPositions.push(target);
@@ -151,7 +157,9 @@ const getTiles = (
         (!findThreatened && figures[tile.occupied].white === white)
       )
         validPositions.pop();
-      break;
+      if (findThreatened && block === "")
+        block = `${white ? "v" : "p"}${tile.pos.str()}`;
+      else break;
     }
     if (!findThreatened && capture === true) {
       if (tile.occupied === -1) validPositions.pop();
@@ -235,7 +243,7 @@ const createFigure = (type: FigureTypes, white: boolean): Figure => {
           ];
           const res = await createConfirm(
             "promotion",
-            { x: event.clientX, y: event.clientY },
+            pos.new(event.clientX, event.clientY),
             ...options.map((type) => FigureTypes[type])
           );
           figures[clickedTile.occupied] = createFigure(options[res], white);
@@ -383,8 +391,8 @@ const createFigure = (type: FigureTypes, white: boolean): Figure => {
   return { getValidMoves, type, white, moved: false, special };
 };
 
-const createFigures = (): Figure[] => {
-  return [
+const createFigures = (
+  setup: [FigureTypes, boolean][] = [
     [FigureTypes.PAWN, true] as [FigureTypes, boolean],
     [FigureTypes.PAWN, true] as [FigureTypes, boolean],
     [FigureTypes.PAWN, true] as [FigureTypes, boolean],
@@ -417,7 +425,9 @@ const createFigures = (): Figure[] => {
     [FigureTypes.BISHOP, false] as [FigureTypes, boolean],
     [FigureTypes.KNIGHT, false] as [FigureTypes, boolean],
     [FigureTypes.ROOCK, false] as [FigureTypes, boolean],
-  ].map((x) => createFigure(x[0], x[1]));
+  ]
+): Figure[] => {
+  return setup.map((x) => createFigure(x[0], x[1]));
 };
 
 export { createFigure, createFigures, FigureTypes, Figure };

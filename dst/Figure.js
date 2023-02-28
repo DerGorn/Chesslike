@@ -30,8 +30,13 @@ const getMoveFunction = (forward, left) => {
             throw new Error("Tried running in circles. Tried moving with 'forward = null' and 'left = null', resulting in no logical step to take.");
     }
 };
+const checkThreat = (tile, white, pos) => {
+    return (tile.threat.includes(white ? "b" : "w") ||
+        tile.threat.includes(white ? `p${pos.str()}` : `v${pos.str()}`));
+};
 const getTiles = (p, white, board, distance = null, forward = true, left = null, distanceX = null, capture = null, safe = false, findThreatened = false) => {
     let validPositions = [];
+    let block = "";
     if (capture === false && findThreatened)
         return validPositions;
     if (distanceX != null) {
@@ -45,8 +50,7 @@ const getTiles = (p, white, board, distance = null, forward = true, left = null,
         if (pos.dist(target, p) === 0)
             throw new Error("Tried jumping nowhere. No distances where provided, so the jump landed on the starting tile.");
         const tile = board.getTile(target);
-        if (!tile ||
-            (!findThreatened && safe && tile.threat.includes(white ? "b" : "w")))
+        if (!tile || (!findThreatened && safe && checkThreat(tile, white, p)))
             return validPositions;
         if (findThreatened ||
             tile.occupied === -1 ||
@@ -58,9 +62,11 @@ const getTiles = (p, white, board, distance = null, forward = true, left = null,
     let target = p;
     while (distance == null ? true : distance > 0) {
         target = move(target, white, 1);
+        if (block)
+            target.condition = block;
         const tile = board.getTile(target);
-        if (tile == null || (safe && tile.threat.includes(white ? "b" : "w"))) {
-            if (findThreatened)
+        if (!tile || (safe && checkThreat(tile, white, p))) {
+            if (tile && findThreatened)
                 validPositions.push(target);
             break;
         }
@@ -69,7 +75,10 @@ const getTiles = (p, white, board, distance = null, forward = true, left = null,
             if (capture === false ||
                 (!findThreatened && figures[tile.occupied].white === white))
                 validPositions.pop();
-            break;
+            if (findThreatened && block === "")
+                block = `${white ? "v" : "p"}${tile.pos.str()}`;
+            else
+                break;
         }
         if (!findThreatened && capture === true) {
             if (tile.occupied === -1)
@@ -128,9 +137,7 @@ const createFigure = (type, white) => {
                         FigureTypes.KNIGHT,
                         FigureTypes.ROOCK,
                     ];
-                    console.log(event);
-                    const res = await createConfirm("promotion", { x: event.clientX, y: event.clientY }, ...options.map((type) => FigureTypes[type]));
-                    console.log(res);
+                    const res = await createConfirm("promotion", pos.new(event.clientX, event.clientY), ...options.map((type) => FigureTypes[type]));
                     figures[clickedTile.occupied] = createFigure(options[res], white);
                 }
             };
@@ -247,40 +254,40 @@ const createFigure = (type, white) => {
         };
     return { getValidMoves, type, white, moved: false, special };
 };
-const createFigures = () => {
-    return [
-        [FigureTypes.PAWN, true],
-        [FigureTypes.PAWN, true],
-        [FigureTypes.PAWN, true],
-        [FigureTypes.PAWN, true],
-        [FigureTypes.PAWN, true],
-        [FigureTypes.PAWN, true],
-        [FigureTypes.PAWN, true],
-        [FigureTypes.PAWN, true],
-        [FigureTypes.ROOCK, true],
-        [FigureTypes.KNIGHT, true],
-        [FigureTypes.BISHOP, true],
-        [FigureTypes.QUEEN, true],
-        [FigureTypes.KING, true],
-        [FigureTypes.BISHOP, true],
-        [FigureTypes.KNIGHT, true],
-        [FigureTypes.ROOCK, true],
-        [FigureTypes.PAWN, false],
-        [FigureTypes.PAWN, false],
-        [FigureTypes.PAWN, false],
-        [FigureTypes.PAWN, false],
-        [FigureTypes.PAWN, false],
-        [FigureTypes.PAWN, false],
-        [FigureTypes.PAWN, false],
-        [FigureTypes.PAWN, false],
-        [FigureTypes.ROOCK, false],
-        [FigureTypes.KNIGHT, false],
-        [FigureTypes.BISHOP, false],
-        [FigureTypes.QUEEN, false],
-        [FigureTypes.KING, false],
-        [FigureTypes.BISHOP, false],
-        [FigureTypes.KNIGHT, false],
-        [FigureTypes.ROOCK, false],
-    ].map((x) => createFigure(x[0], x[1]));
+const createFigures = (setup = [
+    [FigureTypes.PAWN, true],
+    [FigureTypes.PAWN, true],
+    [FigureTypes.PAWN, true],
+    [FigureTypes.PAWN, true],
+    [FigureTypes.PAWN, true],
+    [FigureTypes.PAWN, true],
+    [FigureTypes.PAWN, true],
+    [FigureTypes.PAWN, true],
+    [FigureTypes.ROOCK, true],
+    [FigureTypes.KNIGHT, true],
+    [FigureTypes.BISHOP, true],
+    [FigureTypes.QUEEN, true],
+    [FigureTypes.KING, true],
+    [FigureTypes.BISHOP, true],
+    [FigureTypes.KNIGHT, true],
+    [FigureTypes.ROOCK, true],
+    [FigureTypes.PAWN, false],
+    [FigureTypes.PAWN, false],
+    [FigureTypes.PAWN, false],
+    [FigureTypes.PAWN, false],
+    [FigureTypes.PAWN, false],
+    [FigureTypes.PAWN, false],
+    [FigureTypes.PAWN, false],
+    [FigureTypes.PAWN, false],
+    [FigureTypes.ROOCK, false],
+    [FigureTypes.KNIGHT, false],
+    [FigureTypes.BISHOP, false],
+    [FigureTypes.QUEEN, false],
+    [FigureTypes.KING, false],
+    [FigureTypes.BISHOP, false],
+    [FigureTypes.KNIGHT, false],
+    [FigureTypes.ROOCK, false],
+]) => {
+    return setup.map((x) => createFigure(x[0], x[1]));
 };
 export { createFigure, createFigures, FigureTypes };

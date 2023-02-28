@@ -1,11 +1,13 @@
+import { FigureTypes } from "./Figure.js";
 import { mouseControll, startGame } from "./Game.js";
+import pos from "./Position.js";
 const createEl = (id = "", type = "div", ...classes) => {
     const el = document.createElement(type);
     el.id = id;
     el.classList.add(...classes);
     return el;
 };
-const createConfirm = async (id = "", pos = { x: 0, y: 0 }, ...options) => {
+const createConfirm = async (id = "", p = pos.new(0, 0), ...options) => {
     return new Promise((resolve) => {
         const inputCatch = createEl(id, "div", "inputCatch");
         window.removeEventListener("click", mouseControll, true);
@@ -23,8 +25,8 @@ const createConfirm = async (id = "", pos = { x: 0, y: 0 }, ...options) => {
             });
             return text;
         }));
-        confirm.style.left = `${pos.x}px`;
-        confirm.style.top = `${pos.y}px`;
+        confirm.style.left = `${p.x}px`;
+        confirm.style.top = `${p.y}px`;
         inputCatch.append(confirm);
         body.append(inputCatch);
     });
@@ -46,6 +48,14 @@ const mainMenu = () => {
     body.append(mainMenu);
     menuBody.style.height = `calc(100vh - ${title.getBoundingClientRect().height}px)`;
 };
-console.log(mainMenu);
+const setup = {
+    figures: [
+        [FigureTypes.ROOCK, true],
+        [FigureTypes.KING, false],
+        [FigureTypes.PAWN, true],
+    ],
+    board: [pos.new(1, 7), pos.new(0, 4), pos.new(0, 2)],
+};
+console.log(mainMenu, setup);
 startGame();
 export { body, createEl, createConfirm };

@@ -1,5 +1,6 @@
+import { FigureTypes } from "./Figure.js";
 import { mouseControll, startGame } from "./Game.js";
-import { Position } from "./Position.js";
+import pos, { Position } from "./Position.js";
 
 const createEl = (
   id: string = "",
@@ -14,7 +15,7 @@ const createEl = (
 
 const createConfirm = async (
   id: string = "",
-  pos: Position = { x: 0, y: 0 },
+  p: Position = pos.new(0, 0),
   ...options: (string | HTMLDivElement)[]
 ) => {
   return new Promise<number>((resolve) => {
@@ -41,8 +42,8 @@ const createConfirm = async (
         return text;
       })
     );
-    confirm.style.left = `${pos.x}px`;
-    confirm.style.top = `${pos.y}px`;
+    confirm.style.left = `${p.x}px`;
+    confirm.style.top = `${p.y}px`;
     inputCatch.append(confirm);
     body.append(inputCatch);
   });
@@ -79,7 +80,16 @@ const mainMenu = () => {
   }px)`;
 };
 
-console.log(mainMenu);
+const setup: { figures: [FigureTypes, boolean][]; board: Position[] } = {
+  figures: [
+    [FigureTypes.ROOCK, true],
+    [FigureTypes.KING, false],
+    [FigureTypes.PAWN, true],
+  ],
+  board: [pos.new(1, 7), pos.new(0, 4), pos.new(0, 2)],
+};
+
+console.log(mainMenu, setup);
 // mainMenu();
 startGame();
 
