@@ -1,6 +1,6 @@
 import { Board } from "./Board.js";
 import pos, { Position } from "./Position.js";
-import { archiveTurn, figures } from "./Game.js";
+import { archiveTurn, figures, kingPositions } from "./Game.js";
 import { Tile } from "./Tile.js";
 import { createConfirm } from "./index.js";
 
@@ -83,13 +83,33 @@ const checkThreat = (tile: Tile, white: boolean, pos: Position): boolean => {
   );
 };
 
+const checkKingProtection = (
+  p: Position,
+  white: boolean,
+  board: Board,
+  target: Position,
+  protectingKingFrom: string[]
+): boolean => {
+  let protect = true;
+  const targetThreat = board.getTile(target)?.threat as string;
+  protectingKingFrom.forEach((protectFrom) => {
+    if (!protect) return;
+    if (
+      !targetThreat.includes(`${white ? "p" : "v"}${p.str()}${protectFrom}`) &&
+      !targetThreat.includes(`${white ? "b" : "w"}${protectFrom}`)
+    )
+      protect = false;
+  });
+  return protect;
+};
+
 /**
  * Get all possible Moves from a starting position with some defined rules.
  * Normally all tiles in a straight line from the start to the target are valid, until either a other piece or the end of the board are reached.
  * By setting a 'distanceX' the behaviour changes to a single jump unto the target.
  *
  *
- * @param pos Position of the figure
+ * @param p Position of the figure
  * @param white Color of the figure
  * @param board The board
  * @param distance The max distance to travel, if 'null' distance is infinite
@@ -114,6 +134,18 @@ const getTiles = (
 ): Position[] => {
   let validPositions: Position[] = [];
   let block = "";
+  let protectingKingFrom: string[] = [];
+  kingPositions[white ? "white" : "black"].forEach((pk) => {
+    const threat = board.getTile(pk.pos)?.threat as string;
+    const search = `${white ? "p" : "v"}${p.str()}`;
+    if (threat.includes(search)) {
+      threat.split(search).forEach((text, i) => {
+        if (i === 0) return;
+        const pStr = text.slice(0, threat.indexOf(")"));
+        if (!protectingKingFrom.includes(pStr)) protectingKingFrom.push(pStr);
+      });
+    }
+  });
   if (capture === false && findThreatened) return validPositions;
   if (distanceX != null) {
     if (distance == null)
@@ -133,11 +165,13 @@ const getTiles = (
     if (!tile || (!findThreatened && safe && checkThreat(tile, white, p)))
       return validPositions;
     if (
-      findThreatened ||
-      tile.occupied === -1 ||
-      figures[tile.occupied].white !== white
+      checkKingProtection(p, white, board, target, protectingKingFrom) &&
+      (findThreatened ||
+        tile.occupied === -1 ||
+        figures[tile.occupied].white !== white)
     )
       validPositions.push(target);
+
     return validPositions;
   }
   const move = getMoveFunction(forward, left);
@@ -150,6 +184,8 @@ const getTiles = (
       if (tile && findThreatened) validPositions.push(target);
       break;
     }
+    if (!checkKingProtection(p, white, board, target, protectingKingFrom))
+      break;
     validPositions.push(target);
     if (tile.occupied !== -1) {
       if (
@@ -158,7 +194,7 @@ const getTiles = (
       )
         validPositions.pop();
       if (findThreatened && block === "")
-        block = `${white ? "v" : "p"}${tile.pos.str()}`;
+        block = `${white ? "v" : "p"}${tile.pos.str()}${p.str()}`;
       else break;
     }
     if (!findThreatened && capture === true) {

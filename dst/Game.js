@@ -50,7 +50,7 @@ const setCurPlayerText = (text) => {
 let currentPlayerWhite = false;
 let board = createBoard();
 let figures = [];
-let threatenedKings = [];
+let kingPositions = { white: [], black: [] };
 const endGame = () => {
     if (confirm("Are you sure that was your best move? Because you lost. Would you love to revert time and try again?")) {
         currentPlayerWhite = !currentPlayerWhite;
@@ -63,11 +63,10 @@ const endGame = () => {
     curPlayer.lastChild?.remove();
 };
 const endTurn = (revert = false) => {
-    threatenedKings = board.setThreat();
+    kingPositions = board.setThreat();
     let end = false;
-    threatenedKings.forEach((p) => {
-        if (!revert &&
-            figures[board.getTile(p)?.occupied].white === currentPlayerWhite) {
+    kingPositions[currentPlayerWhite ? "white" : "black"].forEach((kingPos) => {
+        if (!revert && kingPos.threat) {
             endGame();
             end = true;
         }
@@ -80,6 +79,7 @@ const endTurn = (revert = false) => {
     board.print();
     console.log("Figures", figures);
     console.log(history);
+    console.log(kingPositions);
 };
 let clickedTile = null;
 const mouseControll = async (event) => {
@@ -174,8 +174,8 @@ const startGame = (setup = null) => {
     else
         figures = createFigures();
     initGraphic(board.width, board.height);
-    threatenedKings = [];
-    endTurn();
+    kingPositions = { white: [], black: [] };
+    endTurn(true);
     window.addEventListener("click", mouseControll, true);
     window.requestAnimationFrame(gameLoop);
 };
@@ -183,4 +183,4 @@ const closeGame = () => {
     curPlayer.remove();
     closeGraphics();
 };
-export { figures, currentPlayerWhite, startGame, closeGame, revertTurn, mouseControll, archiveTurn, };
+export { figures, currentPlayerWhite, startGame, closeGame, revertTurn, mouseControll, archiveTurn, kingPositions, };

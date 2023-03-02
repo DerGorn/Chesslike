@@ -36,10 +36,10 @@ const getBoardPos = (x: number, y: number) => {
 const initGraphic = (width: number, height: number) => {
   body.append(c);
   const sizeC = () => {
-    c.width = window.innerWidth;
-    c.height = window.innerHeight;
-    c.style.width = `${c.width}px`;
-    c.style.height = `${c.height}px`;
+    c.style.width = `${window.innerWidth}px`;
+    c.style.height = `${window.innerHeight}px`;
+    c.width = window.innerWidth * window.devicePixelRatio;
+    c.height = window.innerHeight * window.devicePixelRatio;
   };
   const scaleG = () => {
     g.setOrigin(15, 100);
@@ -54,6 +54,7 @@ const initGraphic = (width: number, height: number) => {
       (c.height - g.scale * height) / 2
     );
     context.font = `${g.scale / 2}px serif`;
+    context.scale(window.devicePixelRatio, window.devicePixelRatio);
   };
   sizeC();
   scaleG();

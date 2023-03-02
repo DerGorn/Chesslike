@@ -78,7 +78,10 @@ let currentPlayerWhite = false;
 
 let board = createBoard();
 let figures: Figure[] = [];
-let threatenedKings: Position[] = [];
+let kingPositions: {
+  white: { pos: Position; threat: boolean }[];
+  black: { pos: Position; threat: boolean }[];
+} = { white: [], black: [] };
 
 const endGame = () => {
   if (
@@ -97,13 +100,10 @@ const endGame = () => {
 };
 
 const endTurn = (revert = false) => {
-  threatenedKings = board.setThreat();
+  kingPositions = board.setThreat();
   let end = false;
-  threatenedKings.forEach((p) => {
-    if (
-      !revert &&
-      figures[board.getTile(p)?.occupied as number].white === currentPlayerWhite
-    ) {
+  kingPositions[currentPlayerWhite ? "white" : "black"].forEach((kingPos) => {
+    if (!revert && kingPos.threat) {
       endGame();
       end = true;
     }
@@ -115,6 +115,7 @@ const endTurn = (revert = false) => {
   board.print();
   console.log("Figures", figures);
   console.log(history);
+  console.log(kingPositions);
 };
 
 let clickedTile: Tile | null = null;
@@ -228,9 +229,9 @@ const startGame = (
   if (setup) figures = createFigures(setup.figures);
   else figures = createFigures();
   initGraphic(board.width, board.height);
-  threatenedKings = [];
+  kingPositions = { white: [], black: [] };
 
-  endTurn();
+  endTurn(true);
   window.addEventListener("click", mouseControll, true);
 
   window.requestAnimationFrame(gameLoop);
@@ -249,4 +250,5 @@ export {
   revertTurn,
   mouseControll,
   archiveTurn,
+  kingPositions,
 };

@@ -25,11 +25,16 @@ const createBoard = (width = 8, height = 8) => {
                 tile.threat = "";
                 tile.threatened = false;
             }));
-            let threatenedKings = [];
+            let kingPos = { white: [], black: [] };
             this.tiles.forEach((tiles) => tiles.forEach((tile) => {
                 if (tile.occupied === -1)
                     return;
                 const fig = figures[tile.occupied];
+                if (fig.type === FigureTypes.KING)
+                    kingPos[fig.white ? "white" : "black"].push({
+                        pos: tile.pos,
+                        threat: false,
+                    });
                 const ts = fig.getValidMoves(tile.pos, this, true);
                 ts.forEach((p) => {
                     const t = this.getTile(p);
@@ -37,22 +42,22 @@ const createBoard = (width = 8, height = 8) => {
                         return;
                     t.threat += p.condition
                         ? p.condition
-                        : fig.white
-                            ? t.threat.includes("w")
-                                ? ""
-                                : "w"
-                            : t.threat.includes("b")
-                                ? ""
-                                : "b";
+                        : (fig.white ? "w" : "b") + tile.pos.str();
                     if (t.occupied === -1 ||
-                        figures[t.occupied].type !== FigureTypes.KING ||
-                        !t.threat.includes(figures[t.occupied].white ? "b" : "w"))
+                        figures[t.occupied].type !== FigureTypes.KING)
                         return;
-                    t.threatened = true;
-                    threatenedKings.push(t.pos);
+                    t.threatened = t.threat.includes(figures[t.occupied].white ? "b" : "w");
                 });
             }));
-            return threatenedKings;
+            Object.entries(kingPos).forEach(([color, ps]) => {
+                ps.forEach((kingP, i) => {
+                    if (this.getTile(kingP.pos).threatened) {
+                        kingPos[color][i].threat = true;
+                    }
+                });
+            });
+            console.log("setThreat End:", kingPos);
+            return kingPos;
         },
         print: function () {
             console.log(this.tiles.reduce((str, tiles) => str + tiles.reduce((s, tile) => s + tile.occupied + " ", "") + "\n", "\n"));
