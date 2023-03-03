@@ -264,7 +264,7 @@ const createFigure = (type: FigureTypes, white: boolean): Figure => {
     board: Board,
     findThreatened = false
   ): Position[] => {
-    console.log("Forgor ",pos, board, findThreatened);
+    console.log("Forgor ", pos, board, findThreatened);
     return [];
   };
   let movementRules: Rule[] = [];
