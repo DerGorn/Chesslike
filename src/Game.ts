@@ -84,31 +84,43 @@ let kingPositions: {
 } = { white: [], black: [] };
 
 const endGame = () => {
-  if (
-    confirm(
-      "Are you sure that was your best move? Because you lost. Would you love to revert time and try again?"
-    )
-  ) {
-    currentPlayerWhite = !currentPlayerWhite;
-    revertTurn();
-    return;
-  }
   window.removeEventListener("click", mouseControll, true);
-  setCurPlayerStyle(!currentPlayerWhite);
-  setCurPlayerText((currentPlayerWhite ? "Black" : "White") + " won!!");
+  setCurPlayerText(
+    "Checkmate!\n" + (!currentPlayerWhite ? "Black" : "White") + " wins!!"
+  );
   curPlayer.lastChild?.remove();
+};
+
+const checkMate = () => {
+  const mate = !board.tiles.some((tiles) =>
+    tiles.some((tile) => {
+      if (tile.occupied === -1) return;
+      const fig = figures[tile.occupied];
+      if (fig.white === currentPlayerWhite) return;
+      const moves = fig.getValidMoves(tile.pos, board);
+      console.log(
+        "Checking for mate, by trying to move",
+        fig,
+        "on position",
+        tile.pos,
+        "valid moves are",
+        moves
+      );
+      return moves.length > 0;
+    })
+  );
+  console.log(mate);
+  return mate;
 };
 
 const endTurn = (revert = false) => {
   kingPositions = board.setThreat();
   let end = false;
-  kingPositions[currentPlayerWhite ? "white" : "black"].forEach((kingPos) => {
-    if (!revert && kingPos.threat) {
-      endGame();
-      end = true;
-    }
-  });
-  if (end) return;
+  if (!revert) end = checkMate();
+  if (end) {
+    endGame();
+    return;
+  }
   currentPlayerWhite = !currentPlayerWhite;
   setCurPlayerStyle(currentPlayerWhite);
   setCurPlayerText(currentPlayerWhite ? "White's turn" : "Black's turn");

@@ -42,7 +42,8 @@ const createBoard = (width = 8, height = 8) => {
                         return;
                     t.threat += p.condition
                         ? p.condition
-                        : (fig.white ? "w" : "b") + tile.pos.str();
+                        : (fig.white ? "w" : "b") +
+                            tile.pos.str(p.direction);
                     if (t.occupied === -1 ||
                         figures[t.occupied].type !== FigureTypes.KING)
                         return;
@@ -56,7 +57,6 @@ const createBoard = (width = 8, height = 8) => {
                     }
                 });
             });
-            console.log("setThreat End:", kingPos);
             return kingPos;
         },
         print: function () {

@@ -88,15 +88,27 @@ const checkKingProtection = (
   white: boolean,
   board: Board,
   target: Position,
-  protectingKingFrom: string[]
+  protectingKingFrom: string[],
+  check: boolean
 ): boolean => {
   let protect = true;
   const targetThreat = board.getTile(target)?.threat as string;
   protectingKingFrom.forEach((protectFrom) => {
-    if (!protect || target.str() === protectFrom) return;
     if (
-      !targetThreat.includes(`${white ? "p" : "v"}${p.str()}${protectFrom}`) &&
-      !targetThreat.includes(`${white ? "b" : "w"}${protectFrom}`)
+      !protect ||
+      target.str() ===
+        protectFrom.split("/").reduce((str, part, i) => {
+          if (i !== 0) {
+            part = part.slice(1);
+          }
+          return str + part;
+        }, "")
+    )
+      return;
+    if (
+      (check && !targetThreat.includes(`${white ? "b" : "w"}${protectFrom}`)) ||
+      (!targetThreat.includes(`${white ? "p" : "v"}${p.str()}${protectFrom}`) &&
+        !targetThreat.includes(`${white ? "b" : "w"}${protectFrom}`))
     )
       protect = false;
   });
@@ -135,9 +147,8 @@ const getTiles = (
   let validPositions: Position[] = [];
   let block = "";
   let protectingKingFrom: string[] = [];
-  kingPositions[white ? "white" : "black"].forEach((pk) => {
-    const threat = board.getTile(pk.pos)?.threat as string;
-    const search = `${white ? "p" : "v"}${p.str()}`;
+  let check = false;
+  const searchThreat = (threat: string, search: string) => {
     if (threat.includes(search)) {
       threat.split(search).forEach((text, i) => {
         if (i === 0) return;
@@ -145,7 +156,18 @@ const getTiles = (
         if (!protectingKingFrom.includes(pStr)) protectingKingFrom.push(pStr);
       });
     }
-  });
+  };
+  if (figures[board.getTile(p)?.occupied as number].type !== FigureTypes.KING)
+    kingPositions[white ? "white" : "black"].forEach((pk) => {
+      const kingTile = board.getTile(pk.pos) as Tile;
+      const threat = kingTile.threat as string;
+      searchThreat(threat, `${white ? "p" : "v"}${p.str()}`);
+      if (pk.threat) {
+        check = true;
+        searchThreat(threat, `${white ? "b" : "w"}`);
+      }
+    });
+  console.log(check, protectingKingFrom);
   if (capture === false && findThreatened) return validPositions;
   if (distanceX != null) {
     if (distance == null)
@@ -165,7 +187,7 @@ const getTiles = (
     if (!tile || (!findThreatened && safe && checkThreat(tile, white, p)))
       return validPositions;
     if (
-      checkKingProtection(p, white, board, target, protectingKingFrom) &&
+      checkKingProtection(p, white, board, target, protectingKingFrom, check) &&
       (findThreatened ||
         tile.occupied === -1 ||
         figures[tile.occupied].white !== white)
@@ -175,33 +197,59 @@ const getTiles = (
     return validPositions;
   }
   const move = getMoveFunction(forward, left);
+  const direction =
+    forward === null
+      ? left === null
+        ? null
+        : left
+        ? 0
+        : 1
+      : forward
+      ? left === null
+        ? 2
+        : left
+        ? 3
+        : 4
+      : left === null
+      ? 5
+      : left
+      ? 6
+      : 7;
   let target = p;
   while (distance == null ? true : distance > 0) {
     target = move(target, white, 1);
     if (block) target.condition = block;
+    if (direction) target.direction = `${direction}`;
     const tile = board.getTile(target);
     if (!tile || (safe && checkThreat(tile, white, p))) {
       if (tile && findThreatened) validPositions.push(target);
       break;
     }
-    if (!checkKingProtection(p, white, board, target, protectingKingFrom))
-      break;
-    validPositions.push(target);
+    const protectKing = checkKingProtection(
+      p,
+      white,
+      board,
+      target,
+      protectingKingFrom,
+      check
+    );
+    if (protectKing) validPositions.push(target);
     if (tile.occupied !== -1) {
       if (
         capture === false ||
         (!findThreatened && figures[tile.occupied].white === white)
       )
-        validPositions.pop();
+        if (protectKing) validPositions.pop();
       if (findThreatened && block === "")
         block = `${white ? "v" : "p"}${tile.pos.str()}${p.str()}`;
       else break;
     }
     if (!findThreatened && capture === true) {
-      if (tile.occupied === -1) validPositions.pop();
-      else {
+      if (tile.occupied === -1) {
+        if (protectKing) validPositions.pop();
+      } else {
         if (figures[tile.occupied].white === white) {
-          validPositions.pop();
+          if (protectKing) validPositions.pop();
           break;
         }
       }

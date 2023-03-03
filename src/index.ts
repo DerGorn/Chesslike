@@ -82,23 +82,30 @@ const mainMenu = () => {
 
 const setup: { figures: [FigureTypes, boolean][]; board: Position[] } = {
   figures: [
-    [FigureTypes.KING, false],
     [FigureTypes.KING, true],
-    [FigureTypes.ROOCK, true],
+    [FigureTypes.KING, false],
     [FigureTypes.ROOCK, false],
-    [FigureTypes.PAWN, false],
+    [FigureTypes.BISHOP, true],
+    [FigureTypes.PAWN, true],
   ],
   board: [
-    pos.new(0, 0),
+    pos.new(3, 0),
     pos.new(0, 7),
-    pos.new(0, 6),
-    pos.new(0, 4),
-    pos.new(7, 0),
+    pos.new(0, 0),
+    pos.new(2, 2),
+    pos.new(7, 7),
   ],
 };
-
+// const setup: { figures: [FigureTypes, boolean][]; board: Position[] } = {
+//   figures: [
+//     [FigureTypes.KING, true],
+//     [FigureTypes.QUEEN, true],
+//     [FigureTypes.QUEEN, false],
+//   ],
+//   board: [pos.new(3, 7), pos.new(2, 7), pos.new(2, 6)],
+// };
 console.log(mainMenu, setup);
 // mainMenu();
-startGame(setup);
+startGame();
 
 export { body, createEl, createConfirm };

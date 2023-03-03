@@ -1,12 +1,16 @@
 type Position = {
   x: number;
   y: number;
-  str: () => string;
+  str: (direction?: string | null) => string;
   condition?: string;
+  direction?: string;
 };
 
-const posToString = (pos: Position): string => {
-  return `(${pos.x},${pos.y})`;
+const posToString = (
+  pos: Position,
+  direction: string | null = null
+): string => {
+  return `(${pos.x},${pos.y}${direction ? `/${direction}` : ""})`;
 };
 
 const pos = {
@@ -14,8 +18,8 @@ const pos = {
     return {
       x,
       y,
-      str: function () {
-        return posToString(this);
+      str: function (direction: string | null = null) {
+        return posToString(this, direction);
       },
     };
   },
@@ -23,8 +27,8 @@ const pos = {
     return {
       x: a.x + b.x,
       y: a.y + b.y,
-      str: function () {
-        return posToString(this);
+      str: function (direction: string | null = null) {
+        return posToString(this, direction);
       },
     };
   },
@@ -32,8 +36,8 @@ const pos = {
     return {
       x: a * b.x,
       y: a * b.y,
-      str: function () {
-        return posToString(this);
+      str: function (direction: string | null = null) {
+        return posToString(this, direction);
       },
     };
   },

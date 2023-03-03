@@ -1,13 +1,13 @@
-const posToString = (pos) => {
-    return `(${pos.x},${pos.y})`;
+const posToString = (pos, direction = null) => {
+    return `(${pos.x},${pos.y}${direction ? `/${direction}` : ""})`;
 };
 const pos = {
     new: (x, y) => {
         return {
             x,
             y,
-            str: function () {
-                return posToString(this);
+            str: function (direction = null) {
+                return posToString(this, direction);
             },
         };
     },
@@ -15,8 +15,8 @@ const pos = {
         return {
             x: a.x + b.x,
             y: a.y + b.y,
-            str: function () {
-                return posToString(this);
+            str: function (direction = null) {
+                return posToString(this, direction);
             },
         };
     },
@@ -24,8 +24,8 @@ const pos = {
         return {
             x: a * b.x,
             y: a * b.y,
-            str: function () {
-                return posToString(this);
+            str: function (direction = null) {
+                return posToString(this, direction);
             },
         };
     },
