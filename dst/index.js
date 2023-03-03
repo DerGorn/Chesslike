@@ -53,14 +53,14 @@ const setup = {
         [FigureTypes.KING, false],
         [FigureTypes.KING, true],
         [FigureTypes.ROOCK, true],
-        [FigureTypes.BISHOP, false],
+        [FigureTypes.ROOCK, false],
         [FigureTypes.PAWN, false],
     ],
     board: [
         pos.new(0, 0),
         pos.new(0, 7),
         pos.new(0, 6),
-        pos.new(1, 4),
+        pos.new(0, 4),
         pos.new(7, 0),
     ],
 };

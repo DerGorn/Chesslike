@@ -93,7 +93,7 @@ const checkKingProtection = (
   let protect = true;
   const targetThreat = board.getTile(target)?.threat as string;
   protectingKingFrom.forEach((protectFrom) => {
-    if (!protect) return;
+    if (!protect || target.str() === protectFrom) return;
     if (
       !targetThreat.includes(`${white ? "p" : "v"}${p.str()}${protectFrom}`) &&
       !targetThreat.includes(`${white ? "b" : "w"}${protectFrom}`)
