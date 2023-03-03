@@ -98,18 +98,9 @@ const checkMate = () => {
       const fig = figures[tile.occupied];
       if (fig.white === currentPlayerWhite) return;
       const moves = fig.getValidMoves(tile.pos, board);
-      console.log(
-        "Checking for mate, by trying to move",
-        fig,
-        "on position",
-        tile.pos,
-        "valid moves are",
-        moves
-      );
       return moves.length > 0;
     })
   );
-  console.log(mate);
   return mate;
 };
 
@@ -126,8 +117,8 @@ const endTurn = (revert = false) => {
   setCurPlayerText(currentPlayerWhite ? "White's turn" : "Black's turn");
   board.print();
   console.log("Figures", figures);
-  console.log(history);
-  console.log(kingPositions);
+  console.log("History", history);
+  console.log("Kings", kingPositions);
 };
 
 let clickedTile: Tile | null = null;

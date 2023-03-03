@@ -64,7 +64,7 @@ const getTiles = (p, white, board, distance = null, forward = true, left = null,
             threat.split(search).forEach((text, i) => {
                 if (i === 0)
                     return;
-                const pStr = text.slice(0, threat.indexOf(")"));
+                const pStr = text.slice(0, text.indexOf(")") + 1);
                 if (!protectingKingFrom.includes(pStr))
                     protectingKingFrom.push(pStr);
             });
@@ -80,7 +80,6 @@ const getTiles = (p, white, board, distance = null, forward = true, left = null,
                 searchThreat(threat, `${white ? "b" : "w"}`);
             }
         });
-    console.log(check, protectingKingFrom);
     if (capture === false && findThreatened)
         return validPositions;
     if (distanceX != null) {
@@ -166,7 +165,7 @@ const getTiles = (p, white, board, distance = null, forward = true, left = null,
 };
 const createFigure = (type, white) => {
     let getValidMoves = (pos, board, findThreatened = false) => {
-        console.log(pos, board, findThreatened);
+        console.log("Forgor ", pos, board, findThreatened);
         return [];
     };
     let movementRules = [];
@@ -192,7 +191,8 @@ const createFigure = (type, white) => {
             special = async (board, clickedTile, clickedOn, capturePiece, event) => {
                 if (board.sprintedPawn &&
                     Math.abs(pos.x(clickedTile.pos, clickedOn.pos)) === 1 &&
-                    pos.dist(clickedTile.pos, board.sprintedPawn) === 1) {
+                    pos.dist(clickedTile.pos, board.sprintedPawn) === 1 &&
+                    pos.dist(clickedOn.pos, board.sprintedPawn) === 1) {
                     capturePiece(board.getTile(board.sprintedPawn));
                 }
                 capturePiece(clickedOn);

@@ -70,6 +70,7 @@ const drawFigure = (
 ) => {
   const fig = figures[occupied];
   context.strokeStyle = fig.white ? "black" : "white";
+  context.font = `${g.scale / 2}px serif`;
   context.fillStyle = fig.white ? "white" : "black";
   context.lineWidth = 1;
   context.beginPath();
@@ -82,7 +83,7 @@ const drawFigure = (
   context.fillStyle = fig.white ? "black" : "white";
   context.fillText(
     fig.type === FigureTypes.KNIGHT
-      ? "H"
+      ? "N"
       : FigureTypes[fig.type][0].toUpperCase(),
     x - g.scale / 6,
     y + g.scale / 7
@@ -118,9 +119,35 @@ const highlightTile = (tile: Tile, lineWidth = 10) => {
   }
 };
 
+const drawCoordinates = (tiles: Tile[][]) => {
+  const width = tiles.length;
+  const height = tiles[0].length;
+  for (let x = 0; x < width; x++) {
+    const coord = g.getCoordinates(x, height);
+    context.fillStyle = tiles[x][height - 1].white ? "black" : "white";
+    context.font = `${g.scale / 3.5}px serif`;
+    context.fillText(
+      String.fromCharCode(65 + x),
+      coord.x + 0.006 * g.scale,
+      coord.y - 0.006 * g.scale
+    );
+  }
+  for (let y = 0; y < height; y++) {
+    const coord = g.getCoordinates(0, y);
+    context.fillStyle = tiles[0][y].white ? "black" : "white";
+    context.font = `${g.scale / 3.5}px serif`;
+    context.fillText(
+      String(y + 1),
+      coord.x + 0.006 * g.scale,
+      coord.y + 0.206 * g.scale
+    );
+  }
+};
+
 const drawBoard = (tiles: Tile[][]) => {
   tiles.forEach((tiles) => tiles.forEach((tile) => drawTile(tile)));
   tiles.forEach((tiles) => tiles.forEach((tile) => highlightTile(tile)));
+  drawCoordinates(tiles);
 };
 
 const closeGraphics = () => {

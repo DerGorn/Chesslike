@@ -42,8 +42,7 @@ const createBoard = (width = 8, height = 8) => {
                         return;
                     t.threat += p.condition
                         ? p.condition
-                        : (fig.white ? "w" : "b") +
-                            tile.pos.str(p.direction);
+                        : (fig.white ? "w" : "b") + tile.pos.str(p.direction);
                     if (t.occupied === -1 ||
                         figures[t.occupied].type !== FigureTypes.KING)
                         return;
@@ -62,7 +61,11 @@ const createBoard = (width = 8, height = 8) => {
         print: function () {
             console.log(this.tiles.reduce((str, tiles) => str + tiles.reduce((s, tile) => s + tile.occupied + " ", "") + "\n", "\n"));
             console.log(this.tiles.reduce((str, tiles) => str +
-                tiles.reduce((s, tile) => s + (tile.threat === "" ? "_" : tile.threat) + " ", "") +
+                tiles.reduce((s, tile) => s +
+                    tile.pos.str() +
+                    ":\t" +
+                    (tile.threat === "" ? "-" : tile.threat) +
+                    "\n", "") +
                 "\n", "\n"));
         },
         sprintedPawn: null,

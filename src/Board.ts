@@ -60,8 +60,7 @@ const createBoard = (width: number = 8, height: number = 8): Board => {
             if (!t) return;
             t.threat += p.condition
               ? p.condition
-              : (fig.white ? "w" : "b") +
-                tile.pos.str(p.direction);
+              : (fig.white ? "w" : "b") + tile.pos.str(p.direction);
             if (
               t.occupied === -1 ||
               figures[t.occupied].type !== FigureTypes.KING
@@ -95,7 +94,12 @@ const createBoard = (width: number = 8, height: number = 8): Board => {
           (str: string, tiles: Tile[]) =>
             str +
             tiles.reduce(
-              (s, tile) => s + (tile.threat === "" ? "_" : tile.threat) + " ",
+              (s, tile) =>
+                s +
+                tile.pos.str() +
+                ":\t" +
+                (tile.threat === "" ? "-" : tile.threat) +
+                "\n",
               ""
             ) +
             "\n",
